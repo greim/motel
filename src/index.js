@@ -26,7 +26,7 @@ class Motel {
     watchers.push({ pattern, handler });
   }
 
-  connect(elmt = document.documentElement) {
+  observe(elmt = document.documentElement) {
     const _ = PRIV.get(this);
     if (_.mutationObserver) {
       throw new Error('already connected');
@@ -47,7 +47,7 @@ class Motel {
     });
   }
 
-  disconnect() {
+  unobserve() {
     const _ = PRIV.get(this);
     if (!_.mutationObserver) {
       throw new Error('not connected');
