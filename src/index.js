@@ -15,7 +15,7 @@ class Motel {
     PRIV.set(this, { watchers, subscriptions, dedupeCache });
   }
 
-  watch(pattern, handler) {
+  vacancy(pattern, handler) {
     if (!pattern || typeof pattern.test !== 'function') {
       throw new Error('pattern not a regex');
     }

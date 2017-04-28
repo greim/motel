@@ -10,7 +10,7 @@ npm install motel
 
 ## How it works
 
-### 1. Add vacancy watchers
+### 1. Add vacancies
 
 ```js
 // my-motel.js
@@ -18,7 +18,7 @@ npm install motel
 const motel = require('motel');
 const myMotel = module.exports = motel();
 
-myMotel.watch(/users:(.+)/, async function(match, publish) {
+myMotel.vacancy(/users:(.+)/, async function(match, publish) {
   const [,id] = match;
   publish({ type: 'fetchingUser', id });
   const resp = await fetch(`/users/${id}`);

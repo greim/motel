@@ -19,27 +19,27 @@ describe('motel', () => {
 
   describe('instance', () => {
 
-    describe('watch', () => {
+    describe('vacancy', () => {
 
       it('accepts pattern and handler', () => {
         const m = motel();
         const pattern = /foo/;
         const handler = () => {};
-        m.watch(pattern, handler);
+        m.vacancy(pattern, handler);
       });
 
       it('requires regex pattern', () => {
         const m = motel();
         const pattern = 'foo';
         const handler = () => {};
-        assert.throws(() => m.watch(pattern, handler), /regex/);
+        assert.throws(() => m.vacancy(pattern, handler), /regex/);
       });
 
       it('requires function handler', () => {
         const m = motel();
         const pattern = /foo/;
         const handler = 'sdf';
-        assert.throws(() => m.watch(pattern, handler), /function/);
+        assert.throws(() => m.vacancy(pattern, handler), /function/);
       });
     });
 
@@ -85,7 +85,7 @@ describe('motel', () => {
     it('sends on match', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/foo/, spy);
+      m.vacancy(/foo/, spy);
       await m.send('foo');
       assert.strictEqual(spy.callCount, 1);
     });
@@ -93,7 +93,7 @@ describe('motel', () => {
     it('does not send on no match', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/foo/, spy);
+      m.vacancy(/foo/, spy);
       await m.send('bar');
       assert.strictEqual(spy.callCount, 0);
     });
@@ -101,7 +101,7 @@ describe('motel', () => {
     it('dedupes simultaneous', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/foo/, spy);
+      m.vacancy(/foo/, spy);
       await Promise.all([m.send('foo'), m.send('foo')]);
       assert.strictEqual(spy.callCount, 1);
     });
@@ -109,7 +109,7 @@ describe('motel', () => {
     it('does not dedupe non-simultaneous', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/foo/, spy);
+      m.vacancy(/foo/, spy);
       await m.send('foo');
       await m.send('foo');
       assert.strictEqual(spy.callCount, 2);
@@ -118,7 +118,7 @@ describe('motel', () => {
     it('passes a match array', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/fo(o)/, spy);
+      m.vacancy(/fo(o)/, spy);
       await m.send('foo');
       const [arg1] = spy.args[0];
       assert.deepEqual(arg1, ['foo', 'o']);
@@ -127,7 +127,7 @@ describe('motel', () => {
     it('notifies subscribers', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/fo(o)/, (mat, dispatch) => dispatch(123));
+      m.vacancy(/fo(o)/, (mat, dispatch) => dispatch(123));
       m.subscribe(spy);
       await m.send('foo');
       const [arg1] = spy.args[0];
@@ -137,7 +137,7 @@ describe('motel', () => {
     it('notifies multiple subscribers', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.watch(/fo(o)/, (mat, dispatch) => dispatch(123));
+      m.vacancy(/fo(o)/, (mat, dispatch) => dispatch(123));
       m.subscribe(spy);
       m.subscribe(spy);
       await m.send('foo');
@@ -145,23 +145,23 @@ describe('motel', () => {
       assert.deepEqual(arg1, 123);
     });
 
-    it('recovers from watch handler sync error', () => {
+    it('recovers from vacancy handler sync error', () => {
       const m = motel();
-      m.watch(/foo/, () => {
+      m.vacancy(/foo/, () => {
         throw new Error('fake');
       });
       return m.send('foo');
     });
 
-    it('recovers from watch handler async error', () => {
+    it('recovers from vacancy handler async error', () => {
       const m = motel();
-      m.watch(/foo/, () => Promise.reject(new Error('fake')));
+      m.vacancy(/foo/, () => Promise.reject(new Error('fake')));
       return m.send('foo');
     });
 
     it('recovers from subscribe handler sync error', () => {
       const m = motel();
-      m.watch(/foo/, (mat, dispatch) => dispatch('abc'));
+      m.vacancy(/foo/, (mat, dispatch) => dispatch('abc'));
       m.subscribe(() => {
         throw new Error('fake');
       });
@@ -170,7 +170,7 @@ describe('motel', () => {
 
     it('recovers from subscribe handler async error', () => {
       const m = motel();
-      m.watch(/foo/, (mat, dispatch) => dispatch('abc'));
+      m.vacancy(/foo/, (mat, dispatch) => dispatch('abc'));
       m.subscribe(() => Promise.reject(new Error('fake')));
       return m.send('foo');
     });
@@ -178,7 +178,7 @@ describe('motel', () => {
     it('subscribe handler sync error wont halt notifications', async function() {
       const m = motel();
       const spy = sinon.spy(() => { throw new Error('fake'); });
-      m.watch(/foo/, (mat, dispatch) => dispatch('abc'));
+      m.vacancy(/foo/, (mat, dispatch) => dispatch('abc'));
       m.subscribe(spy);
       m.subscribe(spy);
       await m.send('foo');
