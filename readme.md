@@ -38,7 +38,7 @@ myMotel.subscribe(myReduxStore.dispatch);
 myMotel.observe(document.body);
 ```
 
-### 5. Render vacancies
+### 3. Render vacancies
 
 ```js
 // some-component.jsx
