@@ -1,0 +1,32 @@
+{
+  "name": "motel",
+  "version": "1.0.0",
+  "description": "data-vacancy observer",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint --max-warnings 0 src/*.js",
+    "test": "mocha --compilers=js:babel-register $(find src -name \"*.test.js\")",
+    "build": "babel src -d lib --ignore '**/*.test.js'",
+    "sanity": "npm run lint && npm test && npm run build",
+    "prepublish": "npm run sanity"
+  },
+  "keywords": [
+    "data-fetching",
+    "react",
+    "redux"
+  ],
+  "author": "Greg Reimer <gregreimer@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-syntax-async-generators": "^6.13.0",
+    "babel-plugin-transform-async-generator-functions": "^6.24.1",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-register": "^6.24.1",
+    "eslint": "^3.19.0",
+    "eslint-plugin-babel": "^4.1.1",
+    "mocha": "^3.3.0",
+    "sinon": "^2.1.0"
+  }
+}
