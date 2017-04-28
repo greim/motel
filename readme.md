@@ -52,7 +52,7 @@ if (!user) {
 
 ## The Data Vacancy Pattern
 
-The data vacancy pattern addresses the question of how to handle data-fetching in an app. It does so by treating the rendered UI as the system of record for fetch-needs.
+The data vacancy pattern addresses the question of how to handle data-fetching in a Flux-style app. It does so by treating the rendered UI as the system of record for fetch-needs.
 
 We'll use the Elm architecture as an example, since it's a good distillation of Flux, and also provided the inspiration for Redux. An Elm app consists of model, view, and update components.
 
