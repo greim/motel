@@ -56,6 +56,6 @@ The data vacancy pattern addresses the question of how to handle data-fetching i
 
 We'll use the Elm architecture as an example, since it's a good distillation of Flux, and also provided the inspiration for Redux. An Elm app consists of model, view, and update components.
 
-This architecture is pristinely simple, until you try to add data-fetching. Then things start getting complicated, since neither the model, the view, or the update are concerned with data-fetching.
+This architecture is pristinely simple, until you try to add data-fetching. Then things start getting complicated, since neither the model, the view, nor the update are concerned with asynchronous data requests.
 
 The data vacancy pattern moves data-fetching into a separate module. For input, it observes data-vacancies in the DOM. Its output is a stream of dispatch events feeding into the update mechanism.
