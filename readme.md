@@ -54,10 +54,10 @@ if (!user) {
 
 The data vacancy pattern addresses data-fetching in Flux-style apps by treating the rendered UI as the system of record for fetch-needs. This is a recognition of the fact that the only place in our app we know what data we need is the render function.
 
-We'll use the Elm architecture as an example, since it's a good distillation of Flux, and also inspired popular frameworks like Redux. An Elm app has a model, view, and an update component.
+We'll use the Elm architecture as an example, since it's a good distillation of Flux, and also inspired the popular framework Redux. An Elm app has a model, view, and an update component.
 
-This architecture is pristinely simple, until you start mixing in your data-fetching logic. Then things start getting complicated, since neither the model, the view, nor the update know or care about asynchronous data requests. Adding fetches to any of these compromises the architecture.
+This architecture is reactive and simple, until you start mixing in imperative data-fetching logic. Then things start getting complicated, since neither the model, the view, nor the update know or care about asynchronous data requests. Adding fetches to any of these compromises the architecture.
 
-The data vacancy pattern moves data-fetching into a separate module. For input, it observes data-vacancies in the DOM. Its output is a stream of dispatch events feeding back into the update mechanism.
+The data vacancy pattern moves data-fetching into a separate module. For input, it observes data-vacancies in the DOM. Its output is a stream of dispatch events feeding back into the update mechanism. This maintains separation of concerns and re-establishes reactivity.
 
 ![architectural drawing](./dv-arch.png?raw=true)
