@@ -27,20 +27,6 @@ describe('motel', () => {
         const handler = () => {};
         m.vacancy(pattern, handler);
       });
-
-      it('requires regex pattern', () => {
-        const m = motel();
-        const pattern = 'foo';
-        const handler = () => {};
-        assert.throws(() => m.vacancy(pattern, handler), /regex/);
-      });
-
-      it('requires function handler', () => {
-        const m = motel();
-        const pattern = /foo/;
-        const handler = 'sdf';
-        assert.throws(() => m.vacancy(pattern, handler), /function/);
-      });
     });
 
     describe('subscribe', () => {
@@ -50,12 +36,6 @@ describe('motel', () => {
         const sub = () => {};
         m.subscribe(sub);
       });
-
-      it('requires a function', () => {
-        const m = motel();
-        const sub = 'asd';
-        assert.throws(() => m.subscribe(sub), /function/);
-      });
     });
 
     describe('publish', () => {
@@ -64,14 +44,6 @@ describe('motel', () => {
         const m = motel();
         const dataVacancy = 'sdfsdf';
         return m.publish(dataVacancy);
-      });
-
-      it('requires a string', () => {
-        const m = motel();
-        const dataVacancy = 3;
-        return m.publish(dataVacancy)
-          .then(() => Promise.reject('missing execption'))
-          .catch(err => assert.ok(err.message.includes('string')));
       });
 
       it('returns a promise', () => {
