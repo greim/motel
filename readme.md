@@ -1,6 +1,6 @@
 # Motel
 
-*motel* is an implementation of the data vacancy pattern, which simplifies data-fetching in Flux-style apps. It was designed with Redux in mind, but can be used in any unidirectional data-flow app.
+*motel* is an implementation of the [data vacancy pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in Flux-style apps. It was designed with Redux in mind, but can be used in any unidirectional data-flow app.
 
 ## Installation
 
