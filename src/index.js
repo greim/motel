@@ -1,6 +1,7 @@
 module.exports = motel;
 
 const PRIV = new WeakMap();
+const VACANCY_ATTRIBUTE = 'data-vacancy';
 
 function motel() {
   return new Motel();
@@ -16,58 +17,42 @@ class Motel {
   }
 
   vacancy(pattern, handler) {
-    if (!pattern || typeof pattern.test !== 'function') {
-      throw new Error('pattern not a regex');
-    }
-    if (typeof handler !== 'function') {
-      throw new Error('handler not a function');
-    }
     const { watchers } = PRIV.get(this);
     watchers.push({ pattern, handler });
   }
 
-  observe(elmt = document.documentElement) {
+  observe(elmt) {
     const _ = PRIV.get(this);
-    if (_.mutationObserver) {
+    if (_.observer) {
       throw new Error('already connected');
     }
-    _.mutationObserver = new MutationObserver(muts => {
-      for (const mut of muts) {
-        for (const node of mut.addedNodes) {
-          const vacancy = node.getAttribute('data-vacancy');
-          if (vacancy) {
-            _.dedupeSend(vacancy);
-          }
-        }
+    _.observer = new MutationObserver(muts => {
+      for (const vacancy of vacancies(muts)) {
+        this.publish(vacancy);
       }
     });
-    _.mutationObserver.observe(elmt, {
+    _.observer.observe(elmt, {
       childList: true,
       subtree: true,
+      attributeFilter: [VACANCY_ATTRIBUTE],
     });
   }
 
   unobserve() {
     const _ = PRIV.get(this);
-    if (!_.mutationObserver) {
+    if (!_.observer) {
       throw new Error('not connected');
     }
-    _.mutationObserver.disconnect();
-    delete _.mutationObserver;
+    _.observer.disconnect();
+    delete _.observer;
   }
 
   subscribe(sub) {
-    if (typeof sub !== 'function') {
-      throw new Error('not a function');
-    }
     const { subscriptions } = PRIV.get(this);
     subscriptions.push(sub);
   }
 
-  send(vacancy) {
-    if (typeof vacancy !== 'string') {
-      return Promise.reject(new Error('not a string'));
-    }
+  publish(vacancy) {
     const { watchers, subscriptions, dedupeCache } = PRIV.get(this);
     if (!dedupeCache.has(vacancy)) {
       const proms = watchers
@@ -100,5 +85,24 @@ class Motel {
 function genericCatcher(err) {
   if (typeof window !== 'undefined') {
     window.console.error(err.stack);
+  }
+}
+
+function* vacancies(mutations) {
+  const mutLen = mutations.length;
+  for (let i=0; i<mutLen; i++) {
+    const mut = mutations[i];
+    if (mut.type === 'childList') {
+      let len = mut.addedNodes.length;
+      for (let j=0; j<len; j++) {
+        const node = mut.addedNodes[j];
+        if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
+          yield node.getAttribute(VACANCY_ATTRIBUTE);
+        }
+      }
+    } else if (mut.type === 'attributes' && mut.attributeName === VACANCY_ATTRIBUTE) {
+      const vacancy = mut.target.getAttribute(VACANCY_ATTRIBUTE);
+      yield vacancy;
+    }
   }
 }

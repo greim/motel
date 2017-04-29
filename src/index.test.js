@@ -58,18 +58,18 @@ describe('motel', () => {
       });
     });
 
-    describe('send', () => {
+    describe('publish', () => {
 
       it('accepts a string', () => {
         const m = motel();
         const dataVacancy = 'sdfsdf';
-        return m.send(dataVacancy);
+        return m.publish(dataVacancy);
       });
 
       it('requires a string', () => {
         const m = motel();
         const dataVacancy = 3;
-        return m.send(dataVacancy)
+        return m.publish(dataVacancy)
           .then(() => Promise.reject('missing execption'))
           .catch(err => assert.ok(err.message.includes('string')));
       });
@@ -77,24 +77,24 @@ describe('motel', () => {
       it('returns a promise', () => {
         const m = motel();
         const dataVacancy = 'sdfsdf';
-        const prom = m.send(dataVacancy);
+        const prom = m.publish(dataVacancy);
         assert.strictEqual(typeof prom.then, 'function');
       });
     });
 
-    it('sends on match', async function() {
+    it('publishes on match', async function() {
       const m = motel();
       const spy = sinon.spy();
       m.vacancy(/foo/, spy);
-      await m.send('foo');
+      await m.publish('foo');
       assert.strictEqual(spy.callCount, 1);
     });
 
-    it('does not send on no match', async function() {
+    it('does not publish on no match', async function() {
       const m = motel();
       const spy = sinon.spy();
       m.vacancy(/foo/, spy);
-      await m.send('bar');
+      await m.publish('bar');
       assert.strictEqual(spy.callCount, 0);
     });
 
@@ -102,7 +102,7 @@ describe('motel', () => {
       const m = motel();
       const spy = sinon.spy();
       m.vacancy(/foo/, spy);
-      await Promise.all([m.send('foo'), m.send('foo')]);
+      await Promise.all([m.publish('foo'), m.publish('foo')]);
       assert.strictEqual(spy.callCount, 1);
     });
 
@@ -110,8 +110,8 @@ describe('motel', () => {
       const m = motel();
       const spy = sinon.spy();
       m.vacancy(/foo/, spy);
-      await m.send('foo');
-      await m.send('foo');
+      await m.publish('foo');
+      await m.publish('foo');
       assert.strictEqual(spy.callCount, 2);
     });
 
@@ -119,7 +119,7 @@ describe('motel', () => {
       const m = motel();
       const spy = sinon.spy();
       m.vacancy(/fo(o)/, spy);
-      await m.send('foo');
+      await m.publish('foo');
       const [arg1] = spy.args[0];
       assert.deepEqual(arg1, ['foo', 'o']);
     });
@@ -129,7 +129,7 @@ describe('motel', () => {
       const spy = sinon.spy();
       m.vacancy(/fo(o)/, (mat, dispatch) => dispatch(123));
       m.subscribe(spy);
-      await m.send('foo');
+      await m.publish('foo');
       const [arg1] = spy.args[0];
       assert.deepEqual(arg1, 123);
     });
@@ -140,7 +140,7 @@ describe('motel', () => {
       m.vacancy(/fo(o)/, (mat, dispatch) => dispatch(123));
       m.subscribe(spy);
       m.subscribe(spy);
-      await m.send('foo');
+      await m.publish('foo');
       const [arg1] = spy.args[1];
       assert.deepEqual(arg1, 123);
     });
@@ -150,13 +150,13 @@ describe('motel', () => {
       m.vacancy(/foo/, () => {
         throw new Error('fake');
       });
-      return m.send('foo');
+      return m.publish('foo');
     });
 
     it('recovers from vacancy handler async error', () => {
       const m = motel();
       m.vacancy(/foo/, () => Promise.reject(new Error('fake')));
-      return m.send('foo');
+      return m.publish('foo');
     });
 
     it('recovers from subscribe handler sync error', () => {
@@ -165,14 +165,14 @@ describe('motel', () => {
       m.subscribe(() => {
         throw new Error('fake');
       });
-      return m.send('foo');
+      return m.publish('foo');
     });
 
     it('recovers from subscribe handler async error', () => {
       const m = motel();
       m.vacancy(/foo/, (mat, dispatch) => dispatch('abc'));
       m.subscribe(() => Promise.reject(new Error('fake')));
-      return m.send('foo');
+      return m.publish('foo');
     });
 
     it('subscribe handler sync error wont halt notifications', async function() {
@@ -181,7 +181,7 @@ describe('motel', () => {
       m.vacancy(/foo/, (mat, dispatch) => dispatch('abc'));
       m.subscribe(spy);
       m.subscribe(spy);
-      await m.send('foo');
+      await m.publish('foo');
       assert.strictEqual(spy.callCount, 2);
     });
   });
