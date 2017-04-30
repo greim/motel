@@ -33,7 +33,7 @@ myMotel.vacancy(/users:(.+)/, async function(match, publish) {
 // main.js
 
 const myMotel = require('./my-motel');
-const store = redux.createStore(...);
+const myReduxStore = redux.createStore(...);
 myMotel.subscribe(myReduxStore.dispatch);
 myMotel.observe(document.body);
 ```
