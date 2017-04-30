@@ -18,8 +18,8 @@ npm install motel
 const motel = require('motel');
 const myMotel = module.exports = motel();
 
-myMotel.vacancy(/users:(.+)/, async function(match, publish) {
-  const [,id] = match;
+myMotel.vacancy('users[:id]', async function(match, publish) {
+  const id = match.id;
   publish({ type: 'fetchingUser', id });
   const resp = await fetch(`/users/${id}`);
   const user = await resp.json();
@@ -44,7 +44,7 @@ myMotel.observe(document.body);
 // some-component.jsx
 
 if (!user) {
-  return <div data-vacancy={`users:${id}`}>Loading...</div>;
+  return <div data-vacancy={`users[${id}]`}>Loading...</div>;
 } else {
   return <div>{user.name}’s Profile</div>;
 }

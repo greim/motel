@@ -21,9 +21,16 @@ describe('motel', () => {
 
     describe('vacancy', () => {
 
-      it('accepts pattern and handler', () => {
+      it('accepts regex and handler', () => {
         const m = motel();
         const pattern = /foo/;
+        const handler = () => {};
+        m.vacancy(pattern, handler);
+      });
+
+      it('accepts string and handler', () => {
+        const m = motel();
+        const pattern = 'foo:bar';
         const handler = () => {};
         m.vacancy(pattern, handler);
       });
@@ -87,13 +94,23 @@ describe('motel', () => {
       assert.strictEqual(spy.callCount, 2);
     });
 
-    it('passes a match array', async function() {
+    it('passes a match array for regex', async function() {
       const m = motel();
       const spy = sinon.spy();
       m.vacancy(/fo(o)/, spy);
       await m.publish('foo');
       const [arg1] = spy.args[0];
-      assert.deepEqual(arg1, ['foo', 'o']);
+      assert.strictEqual(arg1[0], 'foo');
+      assert.strictEqual(arg1[1], 'o');
+    });
+
+    it('passes a match object for string pattern', async function() {
+      const m = motel();
+      const spy = sinon.spy();
+      m.vacancy('users[:id]', spy);
+      await m.publish('users[abc]');
+      const [arg1] = spy.args[0];
+      assert.strictEqual(arg1.id, 'abc');
     });
 
     it('notifies subscribers', async function() {

@@ -1,5 +1,7 @@
 module.exports = motel;
 
+const UrlPattern = require('url-pattern');
+
 const PRIV = new WeakMap();
 const VACANCY_ATTRIBUTE = 'data-vacancy';
 
@@ -18,6 +20,9 @@ class Motel {
 
   vacancy(pattern, handler) {
     const { watchers } = PRIV.get(this);
+    if (typeof pattern === 'string') {
+      pattern = new UrlPattern(pattern);
+    }
     watchers.push({ pattern, handler });
   }
 
@@ -55,10 +60,15 @@ class Motel {
   publish(vacancy) {
     const { watchers, subscriptions, dedupeCache } = PRIV.get(this);
     if (!dedupeCache.has(vacancy)) {
-      const proms = watchers
-        .filter(({ pattern }) => pattern.test(vacancy))
-        .map(({ pattern, handler }) => {
-          const match = Array.from(vacancy.match(pattern));
+      const proms = [];
+      for (const { pattern, handler } of watchers) {
+        let match;
+        if (pattern.match) {
+          match = pattern.match(vacancy); // url-pattern
+        } else {
+          match = vacancy.match(pattern); // regex
+        }
+        if (match) {
           const dispatch = action => {
             for (const sub of subscriptions) {
               try {
@@ -69,11 +79,12 @@ class Motel {
             }
           };
           try {
-            return Promise.resolve(handler(match, dispatch));
+            proms.push(Promise.resolve(handler(match, dispatch)));
           } catch(ex) {
-            return Promise.reject(ex);
+            proms.push(Promise.reject(ex));
           }
-        });
+        }
+      }
       const prom = Promise.all(proms).catch(genericCatcher);
       prom.then(() => dedupeCache.delete(vacancy));
       dedupeCache.set(vacancy, prom);
