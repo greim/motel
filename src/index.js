@@ -1,29 +1,30 @@
-module.exports = motel;
+module.exports = createMotel;
 
 const UrlPattern = require('url-pattern');
 
 const PRIV = new WeakMap();
 const VACANCY_ATTRIBUTE = 'data-vacancy';
 
-function motel() {
+function createMotel() {
   return new Motel();
 }
 
 class Motel {
 
   constructor() {
-    const watchers = [];
+    const vacancyObservers = [];
     const subscriptions = [];
+    const publish = createPublishFunc(subscriptions);
     const dedupeCache = new Map();
-    PRIV.set(this, { watchers, subscriptions, dedupeCache });
+    PRIV.set(this, { publish, vacancyObservers, subscriptions, dedupeCache });
   }
 
-  vacancy(pattern, handler) {
-    const { watchers } = PRIV.get(this);
+  add(pattern, handler) {
+    const { vacancyObservers } = PRIV.get(this);
     if (typeof pattern === 'string') {
       pattern = new UrlPattern(pattern);
     }
-    watchers.push({ pattern, handler });
+    vacancyObservers.push({ pattern, handler });
   }
 
   observe(elmt) {
@@ -32,7 +33,7 @@ class Motel {
       throw new Error('already connected');
     }
     _.observer = new MutationObserver(muts => {
-      for (const vacancy of vacancies(muts)) {
+      for (let vacancy of iterateVacancies(muts)) {
         this.publish(vacancy);
       }
     });
@@ -58,10 +59,10 @@ class Motel {
   }
 
   publish(vacancy) {
-    const { watchers, subscriptions, dedupeCache } = PRIV.get(this);
+    const { vacancyObservers, dedupeCache, publish } = PRIV.get(this);
     if (!dedupeCache.has(vacancy)) {
       const proms = [];
-      for (const { pattern, handler } of watchers) {
+      for (let { pattern, handler } of vacancyObservers) {
         let match;
         if (pattern.match) {
           match = pattern.match(vacancy); // url-pattern
@@ -69,17 +70,8 @@ class Motel {
           match = vacancy.match(pattern); // regex
         }
         if (match) {
-          const dispatch = action => {
-            for (const sub of subscriptions) {
-              try {
-                sub(action);
-              } catch(ex) {
-                genericCatcher(ex);
-              }
-            }
-          };
           try {
-            proms.push(Promise.resolve(handler(match, dispatch)));
+            proms.push(Promise.resolve(handler(match, publish)));
           } catch(ex) {
             proms.push(Promise.reject(ex));
           }
@@ -99,7 +91,7 @@ function genericCatcher(err) {
   }
 }
 
-function* vacancies(mutations) {
+function* iterateVacancies(mutations) {
   const mutLen = mutations.length;
   for (let i=0; i<mutLen; i++) {
     const mut = mutations[i];
@@ -116,4 +108,16 @@ function* vacancies(mutations) {
       yield vacancy;
     }
   }
+}
+
+function createPublishFunc(subscriptions) {
+  return action => {
+    for (let sub of subscriptions) {
+      try {
+        sub(action);
+      } catch(ex) {
+        genericCatcher(ex);
+      }
+    }
+  };
 }

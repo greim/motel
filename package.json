@@ -1,6 +1,6 @@
 {
   "name": "motel",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "data-vacancy observer",
   "main": "src/index.js",
   "repository": "https://github.com/greim/motel",
@@ -9,7 +9,8 @@
     "test": "mocha --compilers=js:babel-register $(find src -name \"*.test.js\")",
     "build": "babel src -d lib --ignore '**/*.test.js'",
     "sanity": "npm run lint && npm test && npm run build",
-    "prepublish": "npm run sanity"
+    "prepublish": "npm run sanity",
+    "bundle": "npm run build && browserify lib/index.js -s motel -o lib/bundle.js"
   },
   "keywords": [
     "data-fetching",
@@ -21,13 +22,15 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-eslint": "^7.2.3",
-    "babel-plugin-syntax-async-generators": "^6.13.0",
-    "babel-plugin-transform-async-generator-functions": "^6.24.1",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-register": "^6.24.1",
+    "browserify": "^14.3.0",
     "eslint": "^3.19.0",
     "eslint-plugin-babel": "^4.1.1",
     "mocha": "^3.3.0",
     "sinon": "^2.1.0"
+  },
+  "dependencies": {
+    "url-pattern": "^1.0.3"
   }
 }
