@@ -81,7 +81,7 @@ const vacancies = motel();
 
 ### `Motel#listen(pattern, handler)` (Method)
 
-Match specific vacancies by pattern.
+Match specific vacancies by pattern. This is conceptually similar to URL routing.
 
  * `pattern` - Either a regex or a string. If string, [url-pattern](https://www.npmjs.com/package/url-pattern) will be used to create a pattern object.
  * `handler(params, send)` - Callback function for when an observed vacancy matches the above pattern. `params` argument will be whatever match object was produced by url-pattern or a regex. `send` is a function you can call over and over to stream actions to your dispatcher. In a future version of this library, the plan is to support [async generators](https://jakearchibald.com/2017/async-iterators-and-generators/#async-generators-creating-your-own-async-iterator) here, in which case you can `yield thing` rather than `send(thing)`.
