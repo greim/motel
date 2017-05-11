@@ -4,6 +4,8 @@ const UrlPattern = require('url-pattern');
 
 const PRIV = new WeakMap();
 const VACANCY_ATTRIBUTE = 'data-vacancy';
+const VACANCY_ATTRIBUTE_SELECTOR = `[${VACANCY_ATTRIBUTE}]`;
+const IS_BROWSER = typeof window !== 'undefined';
 
 function createMotel() {
   return new Motel();
@@ -19,7 +21,7 @@ class Motel {
     PRIV.set(this, { publish, vacancyObservers, subscriptions, dedupeCache });
   }
 
-  add(pattern, handler) {
+  listen(pattern, handler) {
     const { vacancyObservers } = PRIV.get(this);
     if (typeof pattern === 'string') {
       pattern = new UrlPattern(pattern);
@@ -27,7 +29,7 @@ class Motel {
     vacancyObservers.push({ pattern, handler });
   }
 
-  observe(elmt) {
+  connect(elmt) {
     const _ = PRIV.get(this);
     if (_.observer) {
       throw new Error('already connected');
@@ -44,7 +46,7 @@ class Motel {
     });
   }
 
-  unobserve() {
+  disconnect() {
     const _ = PRIV.get(this);
     if (!_.observer) {
       throw new Error('not connected');
@@ -77,6 +79,9 @@ class Motel {
           }
         }
       }
+      if (proms.length === 0 && IS_BROWSER) {
+        window.console.log(`unmatched vacancy: ${vacancy}`);
+      }
       const prom = Promise.all(proms).catch(genericCatcher);
       prom.then(() => dedupeCache.delete(vacancy));
       dedupeCache.set(vacancy, prom);
@@ -86,7 +91,7 @@ class Motel {
 }
 
 function genericCatcher(err) {
-  if (typeof window !== 'undefined') {
+  if (IS_BROWSER) {
     window.console.error(err.stack);
   }
 }
@@ -99,8 +104,19 @@ function* iterateVacancies(mutations) {
       let len = mut.addedNodes.length;
       for (let j=0; j<len; j++) {
         const node = mut.addedNodes[j];
-        if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
-          yield node.getAttribute(VACANCY_ATTRIBUTE);
+        if (node.nodeType === 1) {
+          if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
+            yield node.getAttribute(VACANCY_ATTRIBUTE);
+          } else {
+            // need to select into the subtree since mutation observer subtree
+            // addedNodes only contains roots of an added subtree.
+            const children = node.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
+            const childLen = children.length;
+            for (let k=0; k<childLen; k++) {
+              const child = children[k];
+              yield child.getAttribute(VACANCY_ATTRIBUTE);
+            }
+          }
         }
       }
     } else if (mut.type === 'attributes' && mut.attributeName === VACANCY_ATTRIBUTE) {
