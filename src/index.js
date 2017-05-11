@@ -42,6 +42,7 @@ class Motel {
     _.observer.observe(elmt, {
       childList: true,
       subtree: true,
+      attributes: true,
       attributeFilter: [VACANCY_ATTRIBUTE],
     });
   }
