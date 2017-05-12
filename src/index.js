@@ -36,7 +36,9 @@ class Motel {
     }
     _.observer = new MutationObserver(muts => {
       for (let vacancy of iterateVacancies(muts)) {
-        this.publish(vacancy);
+        if (vacancy) {
+          this.publish(vacancy);
+        }
       }
     });
     _.observer.observe(elmt, {
@@ -81,7 +83,7 @@ class Motel {
         }
       }
       if (proms.length === 0 && IS_BROWSER) {
-        window.console.log(`unmatched vacancy: ${vacancy}`);
+        window.console.log(`unmatched vacancy: ${JSON.stringify(vacancy)}`);
       }
       const prom = Promise.all(proms).catch(genericCatcher);
       prom.then(() => dedupeCache.delete(vacancy));
