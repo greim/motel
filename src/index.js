@@ -14,19 +14,19 @@ function createMotel() {
 class Motel {
 
   constructor() {
-    const vacancyObservers = [];
+    const listeners = [];
     const subscriptions = [];
     const publish = createPublishFunc(subscriptions);
     const dedupeCache = new Map();
-    PRIV.set(this, { publish, vacancyObservers, subscriptions, dedupeCache });
+    PRIV.set(this, { publish, listeners, subscriptions, dedupeCache });
   }
 
   listen(pattern, handler) {
-    const { vacancyObservers } = PRIV.get(this);
+    const { listeners } = PRIV.get(this);
     if (typeof pattern === 'string') {
       pattern = new UrlPattern(pattern);
     }
-    vacancyObservers.push({ pattern, handler });
+    listeners.push({ pattern, handler });
   }
 
   connect(elmt) {
@@ -64,10 +64,10 @@ class Motel {
   }
 
   publish(vacancy) {
-    const { vacancyObservers, dedupeCache, publish } = PRIV.get(this);
+    const { listeners, dedupeCache, publish } = PRIV.get(this);
     if (!dedupeCache.has(vacancy)) {
       const proms = [];
-      for (let { pattern, handler } of vacancyObservers) {
+      for (let { pattern, handler } of listeners) {
         let match;
         if (pattern.match) {
           match = pattern.match(vacancy); // url-pattern

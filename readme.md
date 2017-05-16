@@ -1,6 +1,6 @@
 # Motel
 
-*Motel* is an implementation of the [data vacancy pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in unidirectional data-flow apps. It was designed with Redux in mind, but has no explicit dependencies on Redux or React.
+*Motel* is an implementation of the [vacancy observer pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in unidirectional data-flow apps. It was designed with Redux in mind, but has no explicit dependencies on Redux or React.
 
 **Note:** Motel is in a 0.x state, and isn't quite ready for prime time.
 
@@ -42,7 +42,7 @@ module.exports = vacancies;
 // main.js
 
 // This is where we setup our store and kick off our app.
-// The observe() call sets up DOM => Motel data-flow.
+// The connect() call sets up DOM => Motel data-flow.
 // The subscribe() call sets up Motel => Redux data-flow.
 
 const vacancies = require('./vacancies');
@@ -123,7 +123,7 @@ vacancies.disconnect();
 
 ### `Motel#subscribe(subscriber)` (Method)
 
-Subscribe to the stream of updates produced by the `publish` function mentioned above. The `subscriber` argument is a function which receives an action which can be fed (for example) into a Redux reducer.
+Subscribe to the stream of updates produced by the mutation observer or the `Motel#publish` function. The `subscriber` argument is a function which receives an action which can be fed (for example) into a Redux reducer.
 
 ```js
 vacancies.subscribe((action) => {
