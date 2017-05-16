@@ -139,6 +139,6 @@ Manually publish a vacancy. You may not need to call this since the mutation obs
 vacancies.publish('users[u123]');
 ```
 
-## The Data Vacancy Pattern
+## The Vacancy Observer Pattern
 
 Read more here: https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38
