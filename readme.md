@@ -2,8 +2,6 @@
 
 *Motel* is an implementation of the [vacancy observer pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in unidirectional data-flow apps. It was designed with Redux in mind, but has no explicit dependencies on Redux or React.
 
-**Note:** Motel is in a 0.x state, and isn't quite ready for prime time.
-
 ## Installation
 
 ```bash
@@ -17,15 +15,10 @@ npm install motel
 ```js
 // vacancies.js
 
-// this module creates any number of vacancy listeners,
-// sending output via the send() function. Anything can be
-// sent, but in a Redux app they'd be action objects
-// shaped like this: { type, ... }
-
 const motel = require('motel');
 const vacancies = motel();
 
-vacancies.listen('users[:id]', async function(params, send) {
+vacancies.listen('users/:id', async function(params, send) {
   const id = params.id;
   send({ type: 'FETCHING_USER', id });
   const resp = await fetch(`/users/${id}`);
@@ -41,10 +34,6 @@ module.exports = vacancies;
 ```js
 // main.js
 
-// This is where we setup our store and kick off our app.
-// The connect() call sets up DOM => Motel data-flow.
-// The subscribe() call sets up Motel => Redux data-flow.
-
 const vacancies = require('./vacancies');
 const myReduxStore = redux.createStore(...);
 vacancies.connect(document.getElementById('app-root'));
@@ -56,13 +45,8 @@ vacancies.subscribe(myReduxStore.dispatch);
 ```js
 // user-profile.jsx
 
-// simply render a vacancy upon encountering missing data,
-// using a value that matches a vacancy listener above. When
-// unit testing this component, you can simply check that it
-// renders vacancies correctly on a given input.
-
 if (!user) {
-  return <div data-vacancy={`users[${id}]`}>Loading...</div>;
+  return <div data-vacancy={`users/${id}`}>Loading...</div>;
 } else {
   return <div>{user.name}’s Profile</div>;
 }
@@ -70,7 +54,7 @@ if (!user) {
 
 ## API
 
-### `motel` (Factory Function)
+### `motel()` (Factory Function)
 
 Initialize a vacancy observer using this factory function.
 
@@ -81,13 +65,13 @@ const vacancies = motel();
 
 ### `Motel#listen(pattern, handler)` (Method)
 
-Match specific vacancies by pattern. This is conceptually similar to URL routing.
+Match specific vacancies by pattern. Conceptually similar to URL routing.
 
- * `pattern` - Either a regex or a string. If string, [url-pattern](https://www.npmjs.com/package/url-pattern) will be used to create a pattern object.
- * `handler(params, send)` - Callback function for when an observed vacancy matches the above pattern. `params` argument will be whatever match object was produced by url-pattern or a regex. `send` is a function you can call over and over to stream actions to your dispatcher. In a future version of this library, the plan is to support [async generators](https://jakearchibald.com/2017/async-iterators-and-generators/#async-generators-creating-your-own-async-iterator) here, in which case you can `yield thing` rather than `send(thing)`.
+ * `pattern` - Regex or string. If string, [url-pattern](https://www.npmjs.com/package/url-pattern) is used.
+ * `handler(params, send)` - Callback when a vacancy matches the pattern. `params` is whatever is produced by a match against url-pattern or regex. `send` is a function you can call multiple times to stream actions to your reducer.
 
 ```js
-vacancies.listen('users[:id]', async function(params, send) {
+vacancies.listen('users/:id', async function(params, send) {
   const id = params.id;
   send({ type: 'FETCHING_USER', id });
   const resp = await fetch(`/users/${id}`);
@@ -96,18 +80,9 @@ vacancies.listen('users[:id]', async function(params, send) {
 });
 ```
 
-Alternatively, use a regex...
+### `Motel#connect(root)` (Method) (DOM-Dependent)
 
-```js
-vacancies.listen(/^users\[(.+)\]$/, async function(match, send) {
-  const id = match[1];
-  ...
-});
-```
-
-### `Motel#connect(elmt)` (Method) (DOM-Dependent)
-
-Start listening for mutations at the given root DOM element. `elmt` should live at or above your app's mount node in the DOM tree, and otherwise not disappear over the life of your app. Note: `connect` and `disconnect` are the only methods in this lib that require a DOM implementation to be present.
+Call once. Start observing vacancies under the given root element. `root` should live at or above your app's mount node in the DOM tree, and otherwise not disappear over the life of your app.
 
 ```js
 vacancies.connect(document.getElementById('root'));
@@ -115,7 +90,7 @@ vacancies.connect(document.getElementById('root'));
 
 ### `Motel#disconnect()` (Method) (DOM-Dependent)
 
-In case you want to remove a previously-created mutation observer. Note: `connect` and `disconnect` are the only methods in this lib that require a DOM implementation to be present.
+Stop observing vacancies.
 
 ```js
 vacancies.disconnect();
@@ -123,22 +98,16 @@ vacancies.disconnect();
 
 ### `Motel#subscribe(subscriber)` (Method)
 
-Subscribe to the stream of updates produced by the mutation observer or the `Motel#publish` function. The `subscriber` argument is a function which receives an action which can be fed (for example) into a Redux reducer.
+Subscribe to the output of the vacancy observer. The `subscriber` argument is a function called arbitrarily many times, which receives an action object to be fed into a Redux reducer.
 
 ```js
-vacancies.subscribe((action) => {
-  myReduxStore.dispatch(action);
-});
+vacancies.subscribe(myReduxStore.dispatch);
 ```
 
-### `Motel#publish(vacancy)` (Method)
+### `Motel#publish(vacancyString)` (Method)
 
-Manually publish a vacancy. You may not need to call this since the mutation observer calls this internally. However this can be useful for example if Motel is being used in a JS environment without a DOM implementation, allowing alternate mechanisms to publish vacancies.
+Manually publish a vacancy, even if you haven't called `connect()`.
 
 ```js
-vacancies.publish('users[u123]');
+vacancies.publish('users/u123');
 ```
-
-## The Data Vacancy Pattern
-
-Read more here: https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38
