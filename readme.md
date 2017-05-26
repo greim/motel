@@ -68,7 +68,7 @@ const vacancies = motel();
 Match specific vacancies by pattern. Conceptually similar to URL routing.
 
  * `pattern` - Regex or string. If string, [url-pattern](https://www.npmjs.com/package/url-pattern) is used.
- * `handler(params, send)` - Callback when a vacancy matches the pattern. `params` is whatever is produced by a match against url-pattern or regex. `send` is a function you can call multiple times to stream actions to your reducer.
+ * `handler(params, send)` - Callback when a vacancy matches the pattern. `params` is whatever is produced by a match against url-pattern or regex. `send` is a function you can call multiple times to stream actions to your reducer. Can be either sync or async function.
 
 ```js
 vacancies.listen('users/:id', async function(params, send) {
