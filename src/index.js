@@ -110,15 +110,14 @@ function* iterateVacancies(mutations) {
         if (node.nodeType === 1) {
           if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
             yield node.getAttribute(VACANCY_ATTRIBUTE);
-          } else {
-            // need to select into the subtree since mutation observer subtree
-            // addedNodes only contains roots of an added subtree.
-            const children = node.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
-            const childLen = children.length;
-            for (let k=0; k<childLen; k++) {
-              const child = children[k];
-              yield child.getAttribute(VACANCY_ATTRIBUTE);
-            }
+          }
+          // need to select into the subtree since mutation observer subtree
+          // addedNodes only contains roots of an added subtree.
+          const children = node.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
+          const childLen = children.length;
+          for (let k=0; k<childLen; k++) {
+            const child = children[k];
+            yield child.getAttribute(VACANCY_ATTRIBUTE);
           }
         }
       }

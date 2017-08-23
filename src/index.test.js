@@ -4,6 +4,13 @@ const motel = require('.');
 const assert = require('assert');
 const sinon = require('sinon');
 
+process.on('unhandledRejection', ex => {
+  if (!ex.isFake) {
+    console.error(ex.stack); // eslint-disable-line no-console
+    process.exit(1);
+  }
+});
+
 describe('motel', () => {
 
   describe('factory', () => {
@@ -160,7 +167,11 @@ describe('motel', () => {
     it('recovers from subscribe handler async error', () => {
       const m = motel();
       m.listen(/foo/, (mat, send) => send('abc'));
-      m.subscribe(() => Promise.reject(new Error('fake')));
+      m.subscribe(() => {
+        const err = new Error('fake');
+        err.isFake = true;
+        return Promise.reject(err);
+      });
       return m.publish('foo');
     });
 
@@ -176,7 +187,11 @@ describe('motel', () => {
 
     it('subscribe handler async error wont halt notifications', async function() {
       const m = motel();
-      const spy = sinon.spy(() => Promise.reject(new Error('fake')));
+      const spy = sinon.spy(() => {
+        const err = new Error('fake');
+        err.isFake = true;
+        Promise.reject(err);
+      });
       m.listen(/foo/, (mat, send) => send('abc'));
       m.subscribe(spy);
       m.subscribe(spy);
