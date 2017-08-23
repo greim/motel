@@ -1,0 +1,68 @@
+html {
+  font-size: .8vw;
+}
+
+body {
+  font-family: helvetica, arial, sans-serif;
+  font-size: 1rem;
+  margin: 0;
+  paddingt: 0;
+  background: #eee;
+}
+
+h1,h2,h3,h4,h5,h6,p,ol,ul,dl,blockquote,pre,.test {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 1.9rem; }
+h3 { font-size: 1.6rem; }
+h4 { font-size: 1.4rem; }
+h5 { font-size: 1.2rem; }
+h6 { font-size: 1.1rem; }
+
+button {
+  font: inherit;
+}
+
+#wrap {
+  padding: 1rem 2rem;
+}
+
+.test {
+  background: #fff;
+  border: .2rem solid #ddd;
+  border-width: .2rem .2rem .2rem 1rem;
+  padding: .5rem 1.5rem;
+  position: relative;
+}
+.test.error {
+  border-color: red;
+}
+.test.success {
+  border-color: green;
+}
+button.run {
+  background: #ddd;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  padding: .8rem 1rem;
+  position: absolute;
+  top: .8rem;
+  right: .8rem;
+  cursor: pointer;
+  opacity: .8;
+  transition: opacity 100ms linear;
+}
+button.run:hover {
+  opacity: 1;
+}
+pre.error {
+  border: .1rem solid #ccc;
+  padding: 1rem;
+  line-height: 1.4;
+  background: #eee;
+  overflow-x: auto;
+}
