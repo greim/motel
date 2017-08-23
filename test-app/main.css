@@ -30,6 +30,10 @@ button {
   padding: 1rem 2rem;
 }
 
+h1.error {
+  color: red;
+}
+
 .test {
   background: #fff;
   border: .2rem solid #ddd;

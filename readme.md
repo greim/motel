@@ -80,6 +80,20 @@ vacancies.listen('users/:id', async function(params, send) {
 });
 ```
 
+#### Note about multiple vacancies
+
+You can declare a single vacancy by rendering this DOM:
+
+```html
+<div data-vacancy="foo/aaa"></div>
+```
+
+In order to declare multiple vacancies at once, render a JSON-stringified array into the attribute, instead of a plain string:
+
+```html
+<div data-vacancy='["foo/aaa", "foo/bbb"]'></div>
+```
+
 ### `Motel#connect(root)` (Method) (DOM-Dependent)
 
 Call once. Start observing vacancies under the given root element. `root` should live at or above your app's mount node in the DOM tree, and otherwise not disappear over the life of your app.

@@ -21,6 +21,9 @@ function makeTest(description, cb) {
       const tNode = document.createTextNode(ex.stack);
       errorEl.appendChild(tNode);
       testEl.appendChild(errorEl);
+      const h1 = document.querySelector('h1');
+      h1.className += ' error';
+      h1.innerHTML += ' (error)';
     } finally {
       buttonEl.parentNode.removeChild(buttonEl);
     }

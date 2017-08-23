@@ -42,6 +42,8 @@ class Motel {
             try {
               vacancies = JSON.parse(vacancy);
             } catch(ex) {
+              const mess = `motel tried and failed to parse '${vacancy}' as JSON`;
+              console.warn(mess); // eslint-disable-line no-console
               vacancies = [vacancy];
             }
             vacancies.forEach(this.publish, this);
