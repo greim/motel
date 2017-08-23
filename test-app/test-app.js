@@ -156,6 +156,28 @@ makeTest('Allow async sends', async function() {
   assert.deepEqual(results, [1, 2]);
 });
 
+makeTest('Allow multiple vacancies in single attribute', async function() {
+  const elmt = document.createElement('div');
+  const results = await vacancyTest('users/:id', (params, send) => {
+    send(params);
+  }, () => {
+    elmt.setAttribute('data-vacancy', JSON.stringify(['users/a', 'users/b']));
+  }, elmt);
+  assert.deepEqual(results, [{ id: 'a' }, { id: 'b' }]);
+});
+
+makeTest('De-dupes vacancies', async function() {
+  const elmt = make('<div></div><div></div><div></div>');
+  const results = await vacancyTest('users/:id', (params, send) => {
+    send(params);
+  }, () => {
+    for (const desc of elmt.querySelectorAll('div')) {
+      desc.setAttribute('data-vacancy', 'users/a');
+    }
+  }, elmt);
+  assert.deepEqual(results, [{ id: 'a' }]);
+});
+
 // ----------------------------------------
 
 function make(html = '') {

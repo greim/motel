@@ -37,7 +37,17 @@ class Motel {
     _.observer = new MutationObserver(muts => {
       for (let vacancy of iterateVacancies(muts)) {
         if (vacancy) {
-          this.publish(vacancy);
+          if (vacancy.startsWith('[')) {
+            let vacancies;
+            try {
+              vacancies = JSON.parse(vacancy);
+            } catch(ex) {
+              vacancies = [vacancy];
+            }
+            vacancies.forEach(this.publish, this);
+          } else {
+            this.publish(vacancy);
+          }
         }
       }
     });
