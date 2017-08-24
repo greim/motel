@@ -30,7 +30,7 @@ button {
   padding: 1rem 2rem;
 }
 
-h1.error {
+h1 span.status.error {
   color: red;
 }
 
