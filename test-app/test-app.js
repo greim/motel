@@ -165,6 +165,17 @@ makeTest('De-dupe vacancies', async function() {
   assert.deepEqual(results, [{ id: 'a' }]);
 });
 
+makeTest('Catch both an attribute mutation and a node addition', async function() {
+  const elmt = make('<i></i>');
+  const results = await vacancyTest('users/:id', undefined, () => {
+    elmt.setAttribute('data-vacancy', 'users/x');
+    const i = elmt.querySelector('i');
+    i.setAttribute('data-vacancy', 'users/a');
+    i.innerHTML = '<b data-vacancy="users/b"></b>';
+  }, elmt);
+  assert.deepEqual(results, [{ id: 'x' }, { id: 'a' }, { id: 'b' }]);
+});
+
 // ----------------------------------------
 
 function make(html = '') {
