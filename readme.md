@@ -36,8 +36,8 @@ module.exports = vacancies;
 
 const vacancies = require('./vacancies');
 const myReduxStore = redux.createStore(...);
-vacancies.connect(document.getElementById('app-root'));
 vacancies.subscribe(myReduxStore.dispatch);
+vacancies.connect(document.getElementById('app-root'));
 ```
 
 ### 3. Render your app
@@ -112,7 +112,7 @@ vacancies.disconnect();
 
 ### `Motel#subscribe(subscriber)` (Method)
 
-Subscribe to the output of the vacancy observer. The `subscriber` argument is a function called arbitrarily many times, which receives an action object to be fed into a Redux reducer.
+Subscribe to the output of the vacancy observer. The `subscriber` argument is a function that will be called many times. Specifically, it will be called whenever a vacancy listener calls its `send()` function, passing along the argument it was called with.
 
 ```js
 vacancies.subscribe(myReduxStore.dispatch);

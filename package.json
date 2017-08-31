@@ -1,11 +1,11 @@
 {
   "name": "motel",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "description": "data-vacancy observer",
   "main": "lib/index.js",
   "repository": "https://github.com/greim/motel",
   "scripts": {
-    "manual-test": "browserify test-app/test-app.js -o test-app/main.js && here -d test-app",
+    "browser-test": "browserify test-app/test-app.js -o test-app/main.js && here -d test-app",
     "lint": "eslint --max-warnings 0 src/*.js",
     "test": "mocha --compilers=js:babel-register $(find src -name \"*.test.js\")",
     "compile": "babel src -d lib --ignore '**/*.test.js'",

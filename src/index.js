@@ -29,28 +29,14 @@ class Motel {
     listeners.push({ pattern, handler });
   }
 
-  connect(elmt) {
+  connect(elmt, { ignoreInitial } = {}) {
     const _ = PRIV.get(this);
     if (_.observer) {
       throw new Error('already connected');
     }
     _.observer = new MutationObserver(muts => {
-      for (let vacancy of iterateVacancies(muts)) {
-        if (vacancy) {
-          if (vacancy.startsWith('[')) {
-            let vacancies;
-            try {
-              vacancies = JSON.parse(vacancy);
-            } catch(ex) {
-              const mess = `motel tried and failed to parse '${vacancy}' as JSON`;
-              console.warn(mess); // eslint-disable-line no-console
-              vacancies = [vacancy];
-            }
-            vacancies.forEach(this.publish, this);
-          } else {
-            this.publish(vacancy);
-          }
-        }
+      for (let rawVacancy of iterateVacancies(muts)) {
+        this._publish(rawVacancy);
       }
     });
     _.observer.observe(elmt, {
@@ -59,6 +45,15 @@ class Motel {
       attributes: true,
       attributeFilter: [VACANCY_ATTRIBUTE],
     });
+    if (!ignoreInitial) {
+      const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
+      this._publish(initialRootVacancy);
+      const initialDescVacancies = elmt.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
+      for (const vacancyEl of initialDescVacancies) {
+        const rawVacancy = vacancyEl.getAttribute(VACANCY_ATTRIBUTE);
+        this._publish(rawVacancy);
+      }
+    }
   }
 
   disconnect() {
@@ -102,6 +97,24 @@ class Motel {
       dedupeCache.set(vacancy, prom);
     }
     return dedupeCache.get(vacancy);
+  }
+
+  _publish(rawVacancy) {
+    if (rawVacancy) {
+      if (rawVacancy.startsWith('[')) {
+        let vacancies;
+        try {
+          vacancies = JSON.parse(rawVacancy);
+        } catch(ex) {
+          const mess = `motel tried and failed to parse '${rawVacancy}' as JSON`;
+          console.warn(mess); // eslint-disable-line no-console
+          vacancies = [rawVacancy];
+        }
+        vacancies.forEach(this.publish, this);
+      } else {
+        this.publish(rawVacancy);
+      }
+    }
   }
 }
 
