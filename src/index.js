@@ -35,8 +35,8 @@ class Motel {
       throw new Error('already connected');
     }
     _.observer = new MutationObserver(muts => {
-      for (let rawVacancy of iterateVacancies(muts)) {
-        this._publish(rawVacancy);
+      for (let vacancy of iterateVacancies(muts)) {
+        this.publish(vacancy);
       }
     });
     _.observer.observe(elmt, {
@@ -47,11 +47,11 @@ class Motel {
     });
     if (!ignoreInitial) {
       const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
-      this._publish(initialRootVacancy);
+      this.publish(initialRootVacancy);
       const initialDescVacancies = elmt.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
       for (const vacancyEl of initialDescVacancies) {
         const rawVacancy = vacancyEl.getAttribute(VACANCY_ATTRIBUTE);
-        this._publish(rawVacancy);
+        this.publish(rawVacancy);
       }
     }
   }
@@ -97,24 +97,6 @@ class Motel {
       dedupeCache.set(vacancy, prom);
     }
     return dedupeCache.get(vacancy);
-  }
-
-  _publish(rawVacancy) {
-    if (rawVacancy) {
-      if (rawVacancy.startsWith('[')) {
-        let vacancies;
-        try {
-          vacancies = JSON.parse(rawVacancy);
-        } catch(ex) {
-          const mess = `motel tried and failed to parse '${rawVacancy}' as JSON`;
-          console.warn(mess); // eslint-disable-line no-console
-          vacancies = [rawVacancy];
-        }
-        vacancies.forEach(this.publish, this);
-      } else {
-        this.publish(rawVacancy);
-      }
-    }
   }
 }
 

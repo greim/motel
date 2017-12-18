@@ -119,14 +119,6 @@ makeTest('Allow async sends', async function() {
   assert.deepEqual(results, [1, 2]);
 });
 
-makeTest('Allow JSON for multiple vacancies', async function() {
-  const results = await vacancyTest({
-    pattern: 'users/:id',
-    trigger: el => $(el).attr('data-vacancy', JSON.stringify(['users/a', 'users/b'])),
-  });
-  assert.deepEqual(results, [{ id: 'a' }, { id: 'b' }]);
-});
-
 makeTest('Gracefully handle malformed JSON', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
