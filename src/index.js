@@ -46,8 +46,10 @@ class Motel {
       attributeFilter: [VACANCY_ATTRIBUTE],
     });
     if (!ignoreInitial) {
-      const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
-      this.publish(initialRootVacancy);
+      if (elmt.hasAttribute(VACANCY_ATTRIBUTE)) {
+        const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
+        this.publish(initialRootVacancy);
+      }
       const initialDescVacancies = elmt.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
       for (const vacancyEl of initialDescVacancies) {
         const rawVacancy = vacancyEl.getAttribute(VACANCY_ATTRIBUTE);
