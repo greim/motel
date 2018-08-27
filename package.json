@@ -1,6 +1,6 @@
 {
   "name": "motel",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "data-vacancy observer",
   "main": "lib/index.js",
   "repository": "https://github.com/greim/motel",
