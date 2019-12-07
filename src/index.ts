@@ -8,128 +8,172 @@ export default function createMotel() {
   return new Motel();
 }
 
-interface MotelOpts {
-  publish: any;
-  listeners: any;
-  subscriptions: any;
-  dedupeCache: any;
-  observer?: any;
+interface UrlMatch {
+  [key: string]: string;
 }
 
-interface ConnectOpts {
-  ignoreInitial?: boolean;
+type Listener<T> = PatternListener<T> | RegexListener<T>;
+type PatternHandlerFn<T> = (match: UrlMatch, send: (thing: T) => void) => void | Promise<void>;
+type RegexHandlerFn<T> = (match: RegExpMatchArray, send: (thing: T) => void) => void | Promise<void>;
+type SendFn<T> = (data: T) => void;
+
+interface PatternListener<T> {
+  is: 'pattern';
+  pattern: UrlPattern;
+  handler: PatternHandlerFn<T>;
 }
 
-class Motel {
+interface RegexListener<T> {
+  is: 'regex';
+  regex: RegExp;
+  handler: RegexHandlerFn<T>;
+}
 
-  private opts: MotelOpts
+interface MotelOpts<T> {
+  send: SendFn<T>;
+  listeners: Listener<T>[];
+  subscriptions: SendFn<T>[];
+  dedupeCache: Map<string, Promise<any>>;
+  observer?: MutationObserver;
+}
+
+class Motel<T = any> {
+
+  private readonly send: SendFn<T>;
+  private readonly listeners: Listener<T>[];
+  private readonly subscriptions: SendFn<T>[];
+  private readonly dedupeCache: Map<string, Promise<any>>;
+  private observer?: MutationObserver;
 
   constructor() {
-    const listeners: any = [];
-    const subscriptions: any = [];
-    const publish = createPublishFunc(subscriptions);
+    const listeners: Listener<T>[] = [];
+    const subscriptions: SendFn<T>[] = [];
+    const send = createPublishFunc(subscriptions);
     const dedupeCache = new Map();
-    this.opts = { publish, listeners, subscriptions, dedupeCache };
+    this.send = send;
+    this.listeners = listeners;
+    this.subscriptions = subscriptions;
+    this.dedupeCache = dedupeCache;
   }
 
-  listen(pattern: any, handler: any) {
-    const { listeners } = this.opts;
-    if (typeof pattern === 'string') {
-      pattern = new UrlPattern(pattern);
+  listen(matcher: string, handler: PatternHandlerFn<T>): void
+  listen(matcher: RegExp, handler: RegexHandlerFn<T>): void
+  listen(matcher: string | RegExp, handler: any): void {
+    const { listeners } = this;
+    if (typeof matcher === 'string') {
+      const pattern = new UrlPattern(matcher);
+      listeners.push({ is: 'pattern', pattern, handler });
+    } else {
+      const regex = matcher;
+      listeners.push({ is: 'regex', regex, handler });
     }
-    listeners.push({ pattern, handler });
   }
 
-  connect(elmt: Element, { ignoreInitial }: ConnectOpts = {}) {
-    const _ = this.opts;
-    if (_.observer) {
+  connect(elmt: Element) {
+    if (this.observer) {
       throw new Error('already connected');
     }
-    _.observer = new MutationObserver(muts => {
+    this.observer = new MutationObserver(muts => {
       for (let vacancy of iterateVacancies(muts)) {
         this.publish(vacancy);
       }
     });
-    _.observer.observe(elmt, {
+    this.observer.observe(elmt, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: [VACANCY_ATTRIBUTE],
     });
-    if (!ignoreInitial) {
-      if (elmt.hasAttribute(VACANCY_ATTRIBUTE)) {
-        const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
-        this.publish(initialRootVacancy);
-      }
-      const initialDescVacancies = elmt.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
-      for (const vacancyEl of initialDescVacancies) {
-        const rawVacancy = vacancyEl.getAttribute(VACANCY_ATTRIBUTE);
+    const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
+    if (initialRootVacancy) {
+      this.publish(initialRootVacancy);
+    }
+    const initialDescVacancies = elmt.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
+    for (const vacancyEl of initialDescVacancies) {
+      const rawVacancy = vacancyEl.getAttribute(VACANCY_ATTRIBUTE);
+      if (rawVacancy) {
         this.publish(rawVacancy);
       }
     }
   }
 
   disconnect() {
-    const _ = this.opts;
-    if (!_.observer) {
+    if (!this.observer) {
       throw new Error('not connected');
     }
-    _.observer.disconnect();
-    delete _.observer;
+    this.observer.disconnect();
+    delete this.observer;
   }
 
-  subscribe(sub: any) {
-    const { subscriptions } = this.opts;
+  subscribe(sub: SendFn<T>) {
+    const { subscriptions } = this;
     subscriptions.push(sub);
   }
 
-  publish(vacancy: any) {
-    const { listeners, dedupeCache, publish } = this.opts;
+  publish(vacancy: string): Promise<any> {
+    const { listeners, dedupeCache, send } = this;
     if (!dedupeCache.has(vacancy)) {
       const proms = [];
-      for (let { pattern, handler } of listeners) {
-        let match;
-        if (pattern.match) {
-          match = pattern.match(vacancy); // url-pattern
-        } else {
-          match = vacancy.match(pattern); // regex
-        }
-        if (match) {
-          try {
-            proms.push(Promise.resolve(handler(match, publish)));
-          } catch(ex) {
-            proms.push(Promise.reject(ex));
+      for (let listener of listeners) {
+        switch (listener.is) {
+          case 'pattern': {
+            const { pattern, handler } = listener;
+            const match = pattern.match(vacancy);
+            if (match) {
+              try {
+                proms.push(Promise.resolve(handler(match, send)));
+              } catch(ex) {
+                proms.push(Promise.reject(ex));
+              }
+            }
+            break;
+          }
+          case 'regex': {
+            const { regex, handler } = listener;
+            const match = vacancy.match(regex);
+            if (match) {
+              try {
+                proms.push(Promise.resolve(handler(match, send)));
+              } catch(ex) {
+                proms.push(Promise.reject(ex));
+              }
+            }
+            break;
+          }
+          default: {
+            assertNever(listener);
           }
         }
       }
       if (proms.length === 0 && IS_BROWSER) {
-        window.console.log(`unmatched vacancy: ${JSON.stringify(vacancy)}`);
+        window.console.log(`unhandled vacancy: ${JSON.stringify(vacancy)}`);
       }
       const prom = Promise.all(proms).catch(genericCatcher);
       prom.then(() => dedupeCache.delete(vacancy));
       dedupeCache.set(vacancy, prom);
     }
-    return dedupeCache.get(vacancy);
+    return dedupeCache.get(vacancy)!;
   }
 }
 
-function genericCatcher(err: any) {
+function genericCatcher<E extends Error>(err: E) {
   if (IS_BROWSER) {
     window.console.error(err.stack);
   }
 }
 
-function* iterateVacancies(mutations: any) {
+function* iterateVacancies(mutations: MutationRecord[]): IterableIterator<string> {
   const mutLen = mutations.length;
   for (let i=0; i<mutLen; i++) {
     const mut = mutations[i];
     if (mut.type === 'childList') {
-      let len = mut.addedNodes.length;
+      const len = mut.addedNodes.length;
       for (let j=0; j<len; j++) {
         const node = mut.addedNodes[j];
-        if (node.nodeType === 1) {
-          if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
-            yield node.getAttribute(VACANCY_ATTRIBUTE);
+        if (isElement(node)) {
+          const vacancy = node.getAttribute(VACANCY_ATTRIBUTE);
+          if (vacancy) {
+            yield vacancy;
           }
           // need to select into the subtree since mutation observer subtree
           // addedNodes only contains roots of an added subtree.
@@ -137,19 +181,26 @@ function* iterateVacancies(mutations: any) {
           const childLen = children.length;
           for (let k=0; k<childLen; k++) {
             const child = children[k];
-            yield child.getAttribute(VACANCY_ATTRIBUTE);
+            const childVacancy = child.getAttribute(VACANCY_ATTRIBUTE);
+            if (childVacancy) {
+              yield childVacancy;
+            }
           }
         }
       }
     } else if (mut.type === 'attributes' && mut.attributeName === VACANCY_ATTRIBUTE) {
-      const vacancy = mut.target.getAttribute(VACANCY_ATTRIBUTE);
-      yield vacancy;
+      if (isElement(mut.target)) {
+        const vacancy = mut.target.getAttribute(VACANCY_ATTRIBUTE);
+        if (vacancy) {
+          yield vacancy;
+        }
+      }
     }
   }
 }
 
-function createPublishFunc(subscriptions: any) {
-  return (action: any) => {
+function createPublishFunc<T>(subscriptions: SendFn<T>[]): SendFn<T> {
+  return (action: T) => {
     for (let sub of subscriptions) {
       try {
         sub(action);
@@ -158,4 +209,12 @@ function createPublishFunc(subscriptions: any) {
       }
     }
   };
+}
+
+function isElement(node: Node): node is Element {
+  return node.nodeType === 1;
+}
+
+function assertNever(nope: never): never {
+  throw new Error(`value ${nope} found unexpectedly`);
 }

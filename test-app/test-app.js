@@ -169,15 +169,6 @@ makeTest('publish initial vacancies on root and descendants', async function() {
   assert.deepEqual(results, [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }]);
 });
 
-makeTest('ignore initial vacancies', async function() {
-  const results = await vacancyTest({
-    pattern: 'users/:id',
-    el: '<i data-vacancy="users/foo"><br data-vacancy="users/bar"/><br data-vacancy="users/baz"/></i>',
-    connectOpts: { ignoreInitial: true },
-  });
-  assert.deepEqual(results, []);
-});
-
 // ----------------------------------------
 
 function defaultHandler(params, send) {
