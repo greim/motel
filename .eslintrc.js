@@ -3,12 +3,12 @@ module.exports = {
     "es6": true,
     "node": 1
   },
-  "parser": "babel-eslint",
+  // "parser": "babel-eslint",
   "parserOptions": {
     "ecmaVersion": 2017
   },
   "plugins": [
-    "babel"
+    // "babel"
   ],
   "globals": {
     "window": true,
@@ -21,7 +21,6 @@ module.exports = {
 
     // Possible Errors
 
-    //"babel/semi": 1,
     'no-cond-assign': 1, // disallow assignment operators in conditional expressions
     'no-console': 1, // disallow the use of console
     'no-constant-condition': 2, // disallow constant expressions in conditions
@@ -88,7 +87,7 @@ module.exports = {
 
     // Strict Mode
 
-    strict: 1, // require or disallow strict mode directives
+    strict: 0, // require or disallow strict mode directives
 
     // Variables
 
