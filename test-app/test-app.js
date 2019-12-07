@@ -1,4 +1,4 @@
-const { default: motel } = require('../lib/index');
+const { Motel } = require('../lib/index');
 const makeTest = require('./make-test');
 const assert = require('assert');
 const $ = require('./tquery');
@@ -184,7 +184,7 @@ function vacancyTest({
 }) {
   return new Promise(resolve => {
     el = $(el).get();
-    const vacancies = motel();
+    const vacancies = Motel.create();
     const output = [];
     vacancies.listen(pattern, handler);
     vacancies.subscribe(arg => output.push(arg));
