@@ -1,4 +1,4 @@
-const motel = require('../src/index');
+const { default: motel } = require('../lib/index');
 const makeTest = require('./make-test');
 const assert = require('assert');
 const $ = require('./tquery');

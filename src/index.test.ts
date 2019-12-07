@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 
-const motel = require('.');
-const assert = require('assert');
-const sinon = require('sinon');
+import motel from '.';
+import assert from 'assert';
+import sinon from 'sinon';
 
-process.on('unhandledRejection', ex => {
+process.on('unhandledRejection', (ex: any) => {
   if (!ex.isFake) {
     console.error(ex.stack); // eslint-disable-line no-console
     process.exit(1);
@@ -123,7 +123,7 @@ describe('motel', () => {
     it('notifies subscribers', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.listen(/fo(o)/, (mat, send) => send(123));
+      m.listen(/fo(o)/, (mat: any, send: any) => send(123));
       m.subscribe(spy);
       await m.publish('foo');
       const [arg1] = spy.args[0];
@@ -133,7 +133,7 @@ describe('motel', () => {
     it('notifies multiple subscribers', async function() {
       const m = motel();
       const spy = sinon.spy();
-      m.listen(/fo(o)/, (mat, send) => send(123));
+      m.listen(/fo(o)/, (mat: any, send: any) => send(123));
       m.subscribe(spy);
       m.subscribe(spy);
       await m.publish('foo');
@@ -157,7 +157,7 @@ describe('motel', () => {
 
     it('recovers from subscribe handler sync error', () => {
       const m = motel();
-      m.listen(/foo/, (mat, send) => send('abc'));
+      m.listen(/foo/, (mat: any, send: any) => send('abc'));
       m.subscribe(() => {
         throw new Error('fake');
       });
@@ -166,9 +166,9 @@ describe('motel', () => {
 
     it('recovers from subscribe handler async error', () => {
       const m = motel();
-      m.listen(/foo/, (mat, send) => send('abc'));
+      m.listen(/foo/, (mat: any, send: any) => send('abc'));
       m.subscribe(() => {
-        const err = new Error('fake');
+        const err: any = new Error('fake');
         err.isFake = true;
         return Promise.reject(err);
       });
@@ -178,7 +178,7 @@ describe('motel', () => {
     it('subscribe handler sync error wont halt notifications', async function() {
       const m = motel();
       const spy = sinon.spy(() => { throw new Error('fake'); });
-      m.listen(/foo/, (mat, send) => send('abc'));
+      m.listen(/foo/, (mat: any, send: any) => send('abc'));
       m.subscribe(spy);
       m.subscribe(spy);
       await m.publish('foo');
@@ -188,11 +188,11 @@ describe('motel', () => {
     it('subscribe handler async error wont halt notifications', async function() {
       const m = motel();
       const spy = sinon.spy(() => {
-        const err = new Error('fake');
+        const err: any = new Error('fake');
         err.isFake = true;
         Promise.reject(err);
       });
-      m.listen(/foo/, (mat, send) => send('abc'));
+      m.listen(/foo/, (mat: any, send: any) => send('abc'));
       m.subscribe(spy);
       m.subscribe(spy);
       await m.publish('foo');

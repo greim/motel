@@ -1,36 +1,47 @@
-module.exports = createMotel;
+import UrlPattern from 'url-pattern';
 
-const UrlPattern = require('url-pattern');
-
-const PRIV = new WeakMap();
 const VACANCY_ATTRIBUTE = 'data-vacancy';
 const VACANCY_ATTRIBUTE_SELECTOR = `[${VACANCY_ATTRIBUTE}]`;
 const IS_BROWSER = typeof window !== 'undefined';
 
-function createMotel() {
+export default function createMotel() {
   return new Motel();
+}
+
+interface MotelOpts {
+  publish: any;
+  listeners: any;
+  subscriptions: any;
+  dedupeCache: any;
+  observer?: any;
+}
+
+interface ConnectOpts {
+  ignoreInitial?: boolean;
 }
 
 class Motel {
 
+  private opts: MotelOpts
+
   constructor() {
-    const listeners = [];
-    const subscriptions = [];
+    const listeners: any = [];
+    const subscriptions: any = [];
     const publish = createPublishFunc(subscriptions);
     const dedupeCache = new Map();
-    PRIV.set(this, { publish, listeners, subscriptions, dedupeCache });
+    this.opts = { publish, listeners, subscriptions, dedupeCache };
   }
 
-  listen(pattern, handler) {
-    const { listeners } = PRIV.get(this);
+  listen(pattern: any, handler: any) {
+    const { listeners } = this.opts;
     if (typeof pattern === 'string') {
       pattern = new UrlPattern(pattern);
     }
     listeners.push({ pattern, handler });
   }
 
-  connect(elmt, { ignoreInitial } = {}) {
-    const _ = PRIV.get(this);
+  connect(elmt: Element, { ignoreInitial }: ConnectOpts = {}) {
+    const _ = this.opts;
     if (_.observer) {
       throw new Error('already connected');
     }
@@ -59,7 +70,7 @@ class Motel {
   }
 
   disconnect() {
-    const _ = PRIV.get(this);
+    const _ = this.opts;
     if (!_.observer) {
       throw new Error('not connected');
     }
@@ -67,13 +78,13 @@ class Motel {
     delete _.observer;
   }
 
-  subscribe(sub) {
-    const { subscriptions } = PRIV.get(this);
+  subscribe(sub: any) {
+    const { subscriptions } = this.opts;
     subscriptions.push(sub);
   }
 
-  publish(vacancy) {
-    const { listeners, dedupeCache, publish } = PRIV.get(this);
+  publish(vacancy: any) {
+    const { listeners, dedupeCache, publish } = this.opts;
     if (!dedupeCache.has(vacancy)) {
       const proms = [];
       for (let { pattern, handler } of listeners) {
@@ -102,13 +113,13 @@ class Motel {
   }
 }
 
-function genericCatcher(err) {
+function genericCatcher(err: any) {
   if (IS_BROWSER) {
     window.console.error(err.stack);
   }
 }
 
-function* iterateVacancies(mutations) {
+function* iterateVacancies(mutations: any) {
   const mutLen = mutations.length;
   for (let i=0; i<mutLen; i++) {
     const mut = mutations[i];
@@ -137,8 +148,8 @@ function* iterateVacancies(mutations) {
   }
 }
 
-function createPublishFunc(subscriptions) {
-  return action => {
+function createPublishFunc(subscriptions: any) {
+  return (action: any) => {
     for (let sub of subscriptions) {
       try {
         sub(action);

@@ -5,10 +5,10 @@
   "main": "lib/index.js",
   "repository": "https://github.com/greim/motel",
   "scripts": {
-    "browser-test": "browserify test-app/test-app.js -o test-app/main.js && here -d test-app",
-    "lint": "eslint --max-warnings 0 src/*.js",
-    "test": "mocha ./src/**/*.js",
-    "compile": "cp -r src/ lib/",
+    "browser-test": "npm run compile && browserify test-app/test-app.js -o test-app/main.js && here -d test-app",
+    "lint": "eslint --max-warnings 0 src/*.ts",
+    "test": "mocha -r ts-node/register ./src/**/*.ts",
+    "compile": "tsc --outDir lib/",
     "sanity": "npm run lint && npm test && npm run compile",
     "prepublish": "npm run sanity"
   },
@@ -20,6 +20,11 @@
   "author": "Greg Reimer <gregreimer@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.12.14",
+    "@types/sinon": "^7.5.1",
+    "@typescript-eslint/eslint-plugin": "^2.10.0",
+    "@typescript-eslint/parser": "^2.10.0",
     "browserify": "^16.5.0",
     "eslint": "^6.7.2",
     "eslint-plugin-babel": "^4.1.1",
@@ -28,6 +33,8 @@
     "sinon": "^2.1.0"
   },
   "dependencies": {
+    "ts-node": "^8.5.4",
+    "typescript": "^3.7.3",
     "url-pattern": "^1.0.3"
   }
 }

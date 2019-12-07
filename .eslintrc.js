@@ -1,14 +1,15 @@
 module.exports = {
   "env": {
     "es6": true,
-    "node": 1
+    "node": true,
   },
-  // "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2017
+    "ecmaVersion": 2017,
+    "sourceType": "module",
   },
   "plugins": [
-    // "babel"
+    "@typescript-eslint"
   ],
   "globals": {
     "window": true,
