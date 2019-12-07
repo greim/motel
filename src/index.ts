@@ -11,8 +11,8 @@ export interface MotelOptions {
   debug?: boolean;
 }
 
-export type PatternHandler<T> = (match: PatternMatch, send: (thing: T) => void) => void | Promise<void>;
-export type RegExpHandler<T> = (match: RegExpMatchArray, send: (thing: T) => void) => void | Promise<void>;
+export type PatternHandler<T> = (match: PatternMatch, send: Dispatcher<T>) => void | Promise<void>;
+export type RegExpHandler<T> = (match: RegExpMatchArray, send: Dispatcher<T>) => void | Promise<void>;
 export type Dispatcher<T> = (data: T) => void;
 type Listener<T> = PatternListener<T> | RegExpListener<T>;
 
