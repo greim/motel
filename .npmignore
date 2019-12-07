@@ -1,5 +1,6 @@
 /src/
-*.test.js
-.babelrc
-sample.js
 /test-app/
+/.vscode/
+*.test.js
+sample.js
+tsconfig.json

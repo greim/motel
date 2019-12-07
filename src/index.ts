@@ -2,53 +2,50 @@ import UrlPattern from 'url-pattern';
 
 const VACANCY_ATTRIBUTE = 'data-vacancy';
 const VACANCY_ATTRIBUTE_SELECTOR = `[${VACANCY_ATTRIBUTE}]`;
-const IS_BROWSER = typeof window !== 'undefined';
 
-export default function createMotel() {
-  return new Motel();
-}
-
-interface UrlMatch {
+export interface PatternMatch {
   [key: string]: string;
 }
 
-type Listener<T> = PatternListener<T> | RegexListener<T>;
-type PatternHandlerFn<T> = (match: UrlMatch, send: (thing: T) => void) => void | Promise<void>;
-type RegexHandlerFn<T> = (match: RegExpMatchArray, send: (thing: T) => void) => void | Promise<void>;
-type SendFn<T> = (data: T) => void;
+export interface MotelOptions {
+  debug?: boolean;
+}
+
+export type PatternHandler<T> = (match: PatternMatch, send: (thing: T) => void) => void | Promise<void>;
+export type RegExpHandler<T> = (match: RegExpMatchArray, send: (thing: T) => void) => void | Promise<void>;
+export type Dispatcher<T> = (data: T) => void;
+type Listener<T> = PatternListener<T> | RegExpListener<T>;
 
 interface PatternListener<T> {
   is: 'pattern';
   pattern: UrlPattern;
-  handler: PatternHandlerFn<T>;
+  handler: PatternHandler<T>;
 }
 
-interface RegexListener<T> {
+interface RegExpListener<T> {
   is: 'regex';
   regex: RegExp;
-  handler: RegexHandlerFn<T>;
+  handler: RegExpHandler<T>;
 }
 
-interface MotelOpts<T> {
-  send: SendFn<T>;
-  listeners: Listener<T>[];
-  subscriptions: SendFn<T>[];
-  dedupeCache: Map<string, Promise<any>>;
-  observer?: MutationObserver;
-}
+export class Motel<T = any> {
 
-class Motel<T = any> {
+  public static create(opts: MotelOptions = {}) {
+    return new Motel(opts);
+  }
 
-  private readonly send: SendFn<T>;
+  private readonly debug: boolean;
+  private readonly send: Dispatcher<T>;
   private readonly listeners: Listener<T>[];
-  private readonly subscriptions: SendFn<T>[];
+  private readonly subscriptions: Dispatcher<T>[];
   private readonly dedupeCache: Map<string, Promise<any>>;
   private observer?: MutationObserver;
 
-  constructor() {
+  private constructor(opts: MotelOptions) {
+    this.debug = !!opts.debug;
     const listeners: Listener<T>[] = [];
-    const subscriptions: SendFn<T>[] = [];
-    const send = createPublishFunc(subscriptions);
+    const subscriptions: Dispatcher<T>[] = [];
+    const send = createPublishFunc(subscriptions, this.debug);
     const dedupeCache = new Map();
     this.send = send;
     this.listeners = listeners;
@@ -56,9 +53,9 @@ class Motel<T = any> {
     this.dedupeCache = dedupeCache;
   }
 
-  listen(matcher: string, handler: PatternHandlerFn<T>): void
-  listen(matcher: RegExp, handler: RegexHandlerFn<T>): void
-  listen(matcher: string | RegExp, handler: any): void {
+  public listen(matcher: string, handler: PatternHandler<T>): void
+  public listen(matcher: RegExp, handler: RegExpHandler<T>): void
+  public listen(matcher: string | RegExp, handler: any): void {
     const { listeners } = this;
     if (typeof matcher === 'string') {
       const pattern = new UrlPattern(matcher);
@@ -69,7 +66,7 @@ class Motel<T = any> {
     }
   }
 
-  connect(elmt: Element) {
+  public connect(elmt: Element): void {
     if (this.observer) {
       throw new Error('already connected');
     }
@@ -97,7 +94,7 @@ class Motel<T = any> {
     }
   }
 
-  disconnect() {
+  public disconnect(): void {
     if (!this.observer) {
       throw new Error('not connected');
     }
@@ -105,12 +102,12 @@ class Motel<T = any> {
     delete this.observer;
   }
 
-  subscribe(sub: SendFn<T>) {
+  public subscribe(sub: Dispatcher<T>): void {
     const { subscriptions } = this;
     subscriptions.push(sub);
   }
 
-  publish(vacancy: string): Promise<any> {
+  public publish(vacancy: string): Promise<any> {
     const { listeners, dedupeCache, send } = this;
     if (!dedupeCache.has(vacancy)) {
       const proms = [];
@@ -118,7 +115,7 @@ class Motel<T = any> {
         switch (listener.is) {
           case 'pattern': {
             const { pattern, handler } = listener;
-            const match = pattern.match(vacancy);
+            const match = processMatch(pattern.match(vacancy));
             if (match) {
               try {
                 proms.push(Promise.resolve(handler(match, send)));
@@ -145,10 +142,13 @@ class Motel<T = any> {
           }
         }
       }
-      if (proms.length === 0 && IS_BROWSER) {
-        window.console.log(`unhandled vacancy: ${JSON.stringify(vacancy)}`);
+      if (proms.length === 0) {
+        if (this.debug) {
+          logError(`unhandled vacancy: ${JSON.stringify(vacancy)}`);
+        }
       }
-      const prom = Promise.all(proms).catch(genericCatcher);
+      const catcher = this.debug ? noisyCatcher : silentCatcher;
+      const prom = Promise.all(proms).catch(catcher);
       prom.then(() => dedupeCache.delete(vacancy));
       dedupeCache.set(vacancy, prom);
     }
@@ -156,9 +156,18 @@ class Motel<T = any> {
   }
 }
 
-function genericCatcher<E extends Error>(err: E) {
-  if (IS_BROWSER) {
-    window.console.error(err.stack);
+function noisyCatcher<E extends Error>(err: E) {
+  logError(err.stack);
+}
+
+// eslint-disable-next-line no-unused-vars
+function silentCatcher<E extends Error>(err: E) {
+}
+
+function logError(...args: any[]): void {
+  if (typeof console !== 'undefined') {
+    // eslint-disable-next-line no-unused-expressions
+    console?.error(...args);
   }
 }
 
@@ -199,13 +208,17 @@ function* iterateVacancies(mutations: MutationRecord[]): IterableIterator<string
   }
 }
 
-function createPublishFunc<T>(subscriptions: SendFn<T>[]): SendFn<T> {
+function createPublishFunc<T>(
+  subscriptions: Dispatcher<T>[],
+  debug: boolean,
+): Dispatcher<T> {
   return (action: T) => {
+    const catcher = debug ? noisyCatcher : silentCatcher;
     for (let sub of subscriptions) {
       try {
         sub(action);
       } catch(ex) {
-        genericCatcher(ex);
+        catcher(ex);
       }
     }
   };
@@ -217,4 +230,23 @@ function isElement(node: Node): node is Element {
 
 function assertNever(nope: never): never {
   throw new Error(`value ${nope} found unexpectedly`);
+}
+
+function processMatch(match: any): PatternMatch | null {
+  if (match) {
+    const result: PatternMatch = {};
+    for (let [key, val] of Object.entries(match)) {
+      if (Array.isArray(val)) {
+        val = val[0];
+      }
+      if (typeof val === 'string') {
+        result[key] = val;
+      } else {
+        result[key] = `${val}`;
+      }
+    }
+    return result;
+  } else {
+    return null;
+  }
 }

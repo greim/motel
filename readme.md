@@ -1,6 +1,6 @@
 # Motel
 
-*Motel* is an implementation of the [vacancy observer pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in unidirectional data-flow apps. It was designed with Redux in mind, but has no explicit dependencies on Redux or React.
+*Motel* is an implementation of the [vacancy observer pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in unidirectional data-flow apps like Elm or React/Redux.
 
 ## Installation
 
@@ -15,8 +15,8 @@ npm install motel
 ```js
 // vacancies.js
 
-const motel = require('motel');
-const vacancies = motel();
+import { Motel } from 'motel';
+export const vacancies = Motel.create();
 
 vacancies.listen('users/:id', async function(params, send) {
   const id = params.id;
@@ -25,8 +25,6 @@ vacancies.listen('users/:id', async function(params, send) {
   const user = await resp.json();
   send({ type: 'RECEIVE_USER', id, user });
 });
-
-module.exports = vacancies;
 ```
 
 ### 2. Wire it up
@@ -34,7 +32,7 @@ module.exports = vacancies;
 ```js
 // main.js
 
-const vacancies = require('./vacancies');
+import vacancies from './vacancies';
 const myReduxStore = redux.createStore(...);
 vacancies.subscribe(myReduxStore.dispatch);
 vacancies.connect(document.getElementById('app-root'));
@@ -43,18 +41,18 @@ vacancies.connect(document.getElementById('app-root'));
 ### 3. Render your app
 
 ```js
-// user-profile.jsx
-
-if (!user) {
-  return <div data-vacancy={`users/${id}`}>Loading...</div>;
-} else {
-  return <div>{user.name}’s Profile</div>;
-}
+const UserComponent = ({ user }) => {
+  if (!user) {
+    return <div data-vacancy={`users/${id}`}>Loading...</div>;
+  } else {
+    return <div>{user.name}’s Profile</div>;
+  }
+};
 ```
 
 ## API
 
-### `motel()` (Factory Function)
+### `Motel.create()` (Factory Function)
 
 Initialize a vacancy observer using this factory function.
 
