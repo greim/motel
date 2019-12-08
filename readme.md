@@ -57,8 +57,8 @@ const UserComponent = ({ user }) => {
 Initialize a vacancy observer using this factory function.
 
 ```js
-const motel = require('motel');
-const vacancies = motel();
+import { Motel } from 'motel';
+const vacancies = Motel.create();
 ```
 
 ### `Motel#listen(pattern, handler)` (Method)
