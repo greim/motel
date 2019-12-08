@@ -4,6 +4,7 @@ const MUTATION_OPTS = Object.freeze({
   childList: true,
   subtree: true,
   attributes: true,
+  attributeOldValue: true,
 });
 
 type EventType = 'enter' | 'exit';
@@ -99,6 +100,9 @@ export class ElementLifecycle {
               const el = mutation.target;
               if (isElement(el)) {
                 if (el.hasAttribute(this.attribute)) {
+                  if (mutation.oldValue) {
+                    this.exit(el);
+                  }
                   this.enter(el);
                 } else {
                   this.exit(el);
@@ -139,8 +143,8 @@ export class ElementLifecycle {
       if (attr !== null) {
         this.elements.set(el, attr);
         if (this.mode.is === 'running') {
-          for (const handler of this.mode.entranceHandlers) {
-            handler(el, attr);
+          for (const entranceHandler of this.mode.entranceHandlers) {
+            entranceHandler(el, attr);
           }
         }
       }
@@ -152,8 +156,8 @@ export class ElementLifecycle {
       const attr = this.elements.get(el);
       if (attr !== undefined) {
         if (this.mode.is === 'running') {
-          for (const handler of this.mode.exitHandlers) {
-            handler(el, attr);
+          for (const exitHandler of this.mode.exitHandlers) {
+            exitHandler(el, attr);
           }
         }
       }

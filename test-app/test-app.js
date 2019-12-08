@@ -178,6 +178,24 @@ makeTest('does not signal exit', async function() {
   assert.deepEqual(results, [{ id: 'foo' }]);
 });
 
+makeTest('handles vacancy changes', async function() {
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    el: '<i><b></b></i>',
+    triggers: [
+      el => $(el, 'b').vac('users/foo'),
+      el => $(el, 'b').vac('users/bar'),
+      el => $(el, 'b').vac(null),
+    ],
+  });
+  assert.deepEqual(results, [
+    { id: 'foo' },
+    { id: 'bar' },
+    ['done', { id: 'foo' }],
+    ['done', { id: 'bar' }],
+  ]);
+});
+
 makeTest('signals exit', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
