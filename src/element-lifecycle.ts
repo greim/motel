@@ -137,28 +137,24 @@ export class ElementLifecycle {
     }
   }
 
-  private enter(...els: Element[]) {
-    for (const el of els) {
-      const attr = el.getAttribute(this.attribute);
-      if (attr !== null) {
-        this.elements.set(el, attr);
-        if (this.mode.is === 'running') {
-          for (const entranceHandler of this.mode.entranceHandlers) {
-            entranceHandler(el, attr);
-          }
+  private enter(el: Element) {
+    const attr = el.getAttribute(this.attribute);
+    if (attr !== null) {
+      this.elements.set(el, attr);
+      if (this.mode.is === 'running') {
+        for (const entranceHandler of this.mode.entranceHandlers) {
+          entranceHandler(el, attr);
         }
       }
     }
   }
 
-  private exit(...els: Element[]) {
-    for (const el of els) {
-      const attr = this.elements.get(el);
-      if (attr !== undefined) {
-        if (this.mode.is === 'running') {
-          for (const exitHandler of this.mode.exitHandlers) {
-            exitHandler(el, attr);
-          }
+  private exit(el: Element) {
+    const attr = this.elements.get(el);
+    if (attr !== undefined) {
+      if (this.mode.is === 'running') {
+        for (const exitHandler of this.mode.exitHandlers) {
+          exitHandler(el, attr);
         }
       }
     }
@@ -170,7 +166,9 @@ export class ElementLifecycle {
         this.enter(node);
       }
       const descendantVacancies = node.querySelectorAll(this.attributeSelector);
-      this.enter(...descendantVacancies);
+      for (const el of descendantVacancies) {
+        this.enter(el);
+      }
     }
   }
 
@@ -180,7 +178,9 @@ export class ElementLifecycle {
         this.exit(node);
       }
       const descendantVacancies = node.querySelectorAll(this.attributeSelector);
-      this.exit(...descendantVacancies);
+      for (const el of descendantVacancies) {
+        this.exit(el);
+      }
     }
   }
 }
