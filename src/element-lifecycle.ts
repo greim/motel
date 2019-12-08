@@ -45,13 +45,11 @@ export class ElementLifecycle {
   private readonly root: Element;
   private readonly attribute: string;
   private readonly attributeSelector: string;
-  private readonly elements: WeakMap<Element, string>
 
   private constructor(root: Element, attr: string) {
     this.attribute = attr;
     this.attributeSelector = `[${attr}]`;
     this.root = root;
-    this.elements = new WeakMap();
     this.mode = {
       is: 'waiting',
       entranceHandlers: [],
@@ -85,27 +83,27 @@ export class ElementLifecycle {
     } else if (this.mode.is === 'waiting') {
       const { entranceHandlers, exitHandlers } = this.mode;
       const observer = new MutationObserver(muts => {
-        for (const mutation of muts) {
-          switch (mutation.type) {
+        for (const mut of muts) {
+          switch (mut.type) {
             case 'childList': {
-              for (const el of mutation.removedNodes) {
+              for (const el of mut.removedNodes) {
                 this.exitAll(el);
               }
-              for (const el of mutation.addedNodes) {
+              for (const el of mut.addedNodes) {
                 this.enterAll(el);
               }
               break;
             }
             case 'attributes': {
-              const el = mutation.target;
+              const el = mut.target;
               if (isElement(el)) {
-                if (el.hasAttribute(this.attribute)) {
-                  if (mutation.oldValue) {
-                    this.exit(el);
-                  }
-                  this.enter(el);
-                } else {
-                  this.exit(el);
+                const oldAttr = mut.oldValue;
+                if (oldAttr) {
+                  this.exit(el, oldAttr);
+                }
+                const newAttr = el.getAttribute(this.attribute);
+                if (newAttr) {
+                  this.enter(el, newAttr);
                 }
               }
               break;
@@ -137,49 +135,50 @@ export class ElementLifecycle {
     }
   }
 
-  private enter(el: Element) {
-    const attr = el.getAttribute(this.attribute);
-    if (attr !== null) {
-      this.elements.set(el, attr);
-      if (this.mode.is === 'running') {
-        for (const entranceHandler of this.mode.entranceHandlers) {
-          entranceHandler(el, attr);
-        }
+  private enter(el: Element, attr: string) {
+    if (this.mode.is === 'running') {
+      for (const entranceHandler of this.mode.entranceHandlers) {
+        entranceHandler(el, attr);
       }
     }
   }
 
-  private exit(el: Element) {
-    const attr = this.elements.get(el);
-    if (attr !== undefined) {
-      if (this.mode.is === 'running') {
-        for (const exitHandler of this.mode.exitHandlers) {
-          exitHandler(el, attr);
-        }
+  private exit(el: Element, attr: string) {
+    if (this.mode.is === 'running') {
+      for (const exitHandler of this.mode.exitHandlers) {
+        exitHandler(el, attr);
       }
     }
   }
 
   private enterAll(node: Node) {
     if (isElement(node)) {
-      if (node.hasAttribute(this.attribute)) {
-        this.enter(node);
+      const attr = node.getAttribute(this.attribute);
+      if (attr) {
+        this.enter(node, attr);
       }
       const descendantVacancies = node.querySelectorAll(this.attributeSelector);
       for (const el of descendantVacancies) {
-        this.enter(el);
+        const descAttr = el.getAttribute(this.attribute);
+        if (descAttr) {
+          this.enter(el, descAttr);
+        }
       }
     }
   }
 
   private exitAll(node: Node) {
     if (isElement(node)) {
-      if (node.hasAttribute(this.attribute)) {
-        this.exit(node);
+      const attr = node.getAttribute(this.attribute);
+      if (attr) {
+        this.exit(node, attr);
       }
       const descendantVacancies = node.querySelectorAll(this.attributeSelector);
       for (const el of descendantVacancies) {
-        this.exit(el);
+        const descAttr = el.getAttribute(this.attribute);
+        if (descAttr) {
+          this.exit(el, descAttr);
+        }
       }
     }
   }

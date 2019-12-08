@@ -191,6 +191,9 @@ makeTest('handles vacancy changes', async function() {
   assert.deepEqual(results, [
     { id: 'foo' },
     { id: 'bar' },
+    // the below 'done' happens out-of-sequence
+    // because the exit awaits a promise, so events
+    // that comes synchronously after it happen first.
     ['done', { id: 'foo' }],
     ['done', { id: 'bar' }],
   ]);
