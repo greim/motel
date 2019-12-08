@@ -1,8 +1,9 @@
 import UrlPattern from 'url-pattern';
 import assertNever from './assert-never';
+import { ElementLifecycle } from './element-lifecycle';
+import { GateKeeper } from './gate-keeper';
 
 const VACANCY_ATTRIBUTE = 'data-vacancy';
-const VACANCY_ATTRIBUTE_SELECTOR = `[${VACANCY_ATTRIBUTE}]`;
 
 export interface PatternMatch {
   [key: string]: string;
@@ -12,9 +13,20 @@ export interface MotelOptions {
   debug?: boolean;
 }
 
-export type PatternHandler<T> = (match: PatternMatch, send: Dispatcher<T>) => void | Promise<void>;
-export type RegExpHandler<T> = (match: RegExpMatchArray, send: Dispatcher<T>) => void | Promise<void>;
+export type PatternHandler<T> = (
+  match: PatternMatch,
+  send: Dispatcher<T>,
+  exitProm: Promise<void>,
+) => void | Promise<void>;
+
+export type RegExpHandler<T> = (
+  match: RegExpMatchArray,
+  send: Dispatcher<T>,
+  exitProm: Promise<void>,
+) => void | Promise<void>;
+
 export type Dispatcher<T> = (data: T) => void;
+
 type Listener<T> = PatternListener<T> | RegExpListener<T>;
 
 interface PatternListener<T> {
@@ -41,19 +53,16 @@ export class Motel<T = any> {
   private readonly send: Dispatcher<T>;
   private readonly listeners: Listener<T>[];
   private readonly subscriptions: Dispatcher<T>[];
-  private readonly dedupeCache: Map<string, Promise<any>>;
-  private observer?: MutationObserver;
+  private lifecycle?: ElementLifecycle;
 
   private constructor(opts: MotelOptions) {
     this.debug = !!opts.debug;
     const listeners: Listener<T>[] = [];
     const subscriptions: Dispatcher<T>[] = [];
     const send = createPublishFunc(subscriptions, this.debug);
-    const dedupeCache = new Map();
     this.send = send;
     this.listeners = listeners;
     this.subscriptions = subscriptions;
-    this.dedupeCache = dedupeCache;
   }
 
   public listen(matcher: string, handler: PatternHandler<T>): void
@@ -70,39 +79,30 @@ export class Motel<T = any> {
   }
 
   public connect(elmt: Element): void {
-    if (this.observer) {
+    if (this.lifecycle) {
       throw new Error('already connected');
     }
-    this.observer = new MutationObserver(muts => {
-      for (let vacancy of iterateVacancies(muts)) {
-        this.publish(vacancy);
-      }
-    });
-    this.observer.observe(elmt, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: [VACANCY_ATTRIBUTE],
-    });
-    const initialRootVacancy = elmt.getAttribute(VACANCY_ATTRIBUTE);
-    if (initialRootVacancy) {
-      this.publish(initialRootVacancy);
-    }
-    const initialDescVacancies = elmt.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
-    for (const vacancyEl of initialDescVacancies) {
-      const rawVacancy = vacancyEl.getAttribute(VACANCY_ATTRIBUTE);
-      if (rawVacancy) {
-        this.publish(rawVacancy);
-      }
-    }
+
+    const gateKeeper = new GateKeeper();
+    this.lifecycle = ElementLifecycle.of(elmt, VACANCY_ATTRIBUTE)
+      .on('enter', (el, vacancy) => {
+        const exitProm = gateKeeper.incr(vacancy);
+        if (exitProm) {
+          this.publish(vacancy, exitProm);
+        }
+      })
+      .on('exit', (el, attr) => {
+        gateKeeper.decr(attr);
+      })
+      .start();
   }
 
   public disconnect(): void {
-    if (!this.observer) {
+    if (!this.lifecycle) {
       throw new Error('not connected');
     }
-    this.observer.disconnect();
-    delete this.observer;
+    this.lifecycle.stop();
+    delete this.lifecycle;
   }
 
   public subscribe(sub: Dispatcher<T>): void {
@@ -110,52 +110,47 @@ export class Motel<T = any> {
     subscriptions.push(sub);
   }
 
-  public publish(vacancy: string): Promise<any> {
-    const { listeners, dedupeCache, send } = this;
-    if (!dedupeCache.has(vacancy)) {
-      const proms = [];
-      for (let listener of listeners) {
-        switch (listener.is) {
-          case 'pattern': {
-            const { pattern, handler } = listener;
-            const match = processMatch(pattern.match(vacancy));
-            if (match) {
-              try {
-                proms.push(Promise.resolve(handler(match, send)));
-              } catch(ex) {
-                proms.push(Promise.reject(ex));
-              }
+  public publish(vacancy: string, exitProm: Promise<void>): void {
+    const { listeners, send } = this;
+    const proms = [];
+    for (let listener of listeners) {
+      switch (listener.is) {
+        case 'pattern': {
+          const { pattern, handler } = listener;
+          const match = processMatch(pattern.match(vacancy));
+          if (match) {
+            try {
+              proms.push(Promise.resolve(handler(match, send, exitProm)));
+            } catch(ex) {
+              proms.push(Promise.reject(ex));
             }
-            break;
           }
-          case 'regex': {
-            const { regex, handler } = listener;
-            const match = vacancy.match(regex);
-            if (match) {
-              try {
-                proms.push(Promise.resolve(handler(match, send)));
-              } catch(ex) {
-                proms.push(Promise.reject(ex));
-              }
+          break;
+        }
+        case 'regex': {
+          const { regex, handler } = listener;
+          const match = vacancy.match(regex);
+          if (match) {
+            try {
+              proms.push(Promise.resolve(handler(match, send, exitProm)));
+            } catch(ex) {
+              proms.push(Promise.reject(ex));
             }
-            break;
           }
-          default: {
-            assertNever(listener);
-          }
+          break;
+        }
+        default: {
+          assertNever(listener);
         }
       }
-      if (proms.length === 0) {
-        if (this.debug) {
-          logError(`unhandled vacancy: ${JSON.stringify(vacancy)}`);
-        }
-      }
-      const catcher = this.debug ? noisyCatcher : silentCatcher;
-      const prom = Promise.all(proms).catch(catcher);
-      prom.then(() => dedupeCache.delete(vacancy));
-      dedupeCache.set(vacancy, prom);
     }
-    return dedupeCache.get(vacancy)!;
+    if (proms.length === 0) {
+      if (this.debug) {
+        logError(`unhandled vacancy: ${JSON.stringify(vacancy)}`);
+      }
+    }
+    const catcher = this.debug ? noisyCatcher : silentCatcher;
+    Promise.all(proms).catch(catcher);
   }
 }
 
@@ -174,43 +169,6 @@ function logError(...args: any[]): void {
   }
 }
 
-function* iterateVacancies(mutations: MutationRecord[]): IterableIterator<string> {
-  const mutLen = mutations.length;
-  for (let i=0; i<mutLen; i++) {
-    const mut = mutations[i];
-    if (mut.type === 'childList') {
-      const len = mut.addedNodes.length;
-      for (let j=0; j<len; j++) {
-        const node = mut.addedNodes[j];
-        if (isElement(node)) {
-          const vacancy = node.getAttribute(VACANCY_ATTRIBUTE);
-          if (vacancy) {
-            yield vacancy;
-          }
-          // need to select into the subtree since mutation observer subtree
-          // addedNodes only contains roots of an added subtree.
-          const children = node.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
-          const childLen = children.length;
-          for (let k=0; k<childLen; k++) {
-            const child = children[k];
-            const childVacancy = child.getAttribute(VACANCY_ATTRIBUTE);
-            if (childVacancy) {
-              yield childVacancy;
-            }
-          }
-        }
-      }
-    } else if (mut.type === 'attributes' && mut.attributeName === VACANCY_ATTRIBUTE) {
-      if (isElement(mut.target)) {
-        const vacancy = mut.target.getAttribute(VACANCY_ATTRIBUTE);
-        if (vacancy) {
-          yield vacancy;
-        }
-      }
-    }
-  }
-}
-
 function createPublishFunc<T>(
   subscriptions: Dispatcher<T>[],
   debug: boolean,
@@ -225,10 +183,6 @@ function createPublishFunc<T>(
       }
     }
   };
-}
-
-function isElement(node: Node): node is Element {
-  return node.nodeType === 1;
 }
 
 function processMatch(match: any): PatternMatch | null {

@@ -61,7 +61,11 @@ makeTest('Catch multiple attribute additions', async function() {
 makeTest('Catch multiple node additions', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
-    trigger: el => $(el).append([4, 5, 6].map(n => `<b data-vacancy="users/${n}"></b>`).join('')),
+    trigger: el => $(el)
+      .append([4, 5, 6]
+        .map(n => `<b data-vacancy="users/${n}"></b>`)
+        .join('')
+      ),
   });
   assert.deepEqual(results, [
     { id: '4' },
@@ -73,7 +77,12 @@ makeTest('Catch multiple node additions', async function() {
 makeTest('Catch nested node additions', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
-    trigger: el => $(el).append('<b data-vacancy="users/4"><br data-vacancy="users/5"><br data-vacancy="users/6"></b>'),
+    trigger: el => $(el).append(`
+      <b data-vacancy="users/4">
+        <br data-vacancy="users/5">
+        <br data-vacancy="users/6">
+      </b>`
+    ),
   });
   assert.deepEqual(results, [
     { id: '4' },
@@ -119,14 +128,6 @@ makeTest('Allow async sends', async function() {
   assert.deepEqual(results, [1, 2]);
 });
 
-makeTest('Gracefully handle malformed JSON', async function() {
-  const results = await vacancyTest({
-    pattern: 'users/:id',
-    trigger: el => $(el).attr('data-vacancy', JSON.stringify(['users/a', 'users/b']) + '}}}'),
-  });
-  assert.deepEqual(results, []);
-});
-
 makeTest('De-dupe vacancies', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
@@ -169,10 +170,70 @@ makeTest('publish initial vacancies on root and descendants', async function() {
   assert.deepEqual(results, [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }]);
 });
 
+makeTest('does not signal exit', async function() {
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    el: '<i data-vacancy="users/foo"></i>',
+  });
+  assert.deepEqual(results, [{ id: 'foo' }]);
+});
+
+makeTest('signals exit', async function() {
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    el: '<i data-vacancy="users/foo"><i data-vacancy="users/bar"></i></i>',
+    triggers: [
+      el => el.removeAttribute('data-vacancy'),
+      el => operate(el, 'i', sub => sub.removeAttribute('data-vacancy')),
+    ],
+  });
+  assert.deepEqual(results, [
+    { id: 'foo' },
+    { id: 'bar' },
+    ['done', { id: 'foo' }],
+    ['done', { id: 'bar' }],
+  ]);
+});
+
+makeTest('Only signal exit on last', async function() {
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    el: `<div>
+      <b class="a"></b>
+      <b class="b"></b>
+      <b class="c"></b>
+    </div>`,
+    triggers: [
+      el => {
+        $(el, '.a').vac('users/x');
+        $(el, '.b').vac('users/x');
+        $(el, '.c').vac('users/x');
+      },
+      el => $(el, '.a').vac(null),
+      el => $(el, '.b').vac(null),
+      (el, output) => {
+        assert.deepEqual(output, [{ id: 'x' }]);
+      },
+      el => $(el, '.c').vac(null),
+    ],
+  });
+  assert.deepEqual(results, [
+    { id: 'x' },
+    ['done', { id: 'x' }],
+  ]);
+});
+
 // ----------------------------------------
 
-function defaultHandler(params, send) {
+function operate(el, sel, action) {
+  const sub = el.querySelector(sel);
+  action(sub);
+}
+
+async function defaultHandler(params, send, exit) {
   send(params);
+  await exit;
+  send(['done', params]);
 }
 
 function vacancyTest({
@@ -180,20 +241,28 @@ function vacancyTest({
   handler = defaultHandler,
   connectOpts,
   trigger = () => {},
+  triggers = [],
   el,
 }) {
-  return new Promise(resolve => {
-    el = $(el).get();
-    const vacancies = Motel.create();
-    const output = [];
-    vacancies.listen(pattern, handler);
-    vacancies.subscribe(arg => output.push(arg));
-    vacancies.connect(el, connectOpts);
-    trigger(el);
-    wait(100).then(() => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      el = $(el).get();
+      const vacancies = Motel.create();
+      const output = [];
+      vacancies.listen(pattern, handler);
+      vacancies.subscribe(arg => output.push(arg));
+      vacancies.connect(el, connectOpts);
+      await trigger(el, output);
+      await wait(100);
+      for (const tr of triggers) {
+        await tr(el, output);
+        await wait(100);
+      }
       vacancies.disconnect();
       resolve(output);
-    });
+    } catch(ex) {
+      reject(ex);
+    }
   });
 }
 

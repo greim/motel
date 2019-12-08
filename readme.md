@@ -1,6 +1,6 @@
 # Motel
 
-*Motel* is an implementation of the [vacancy observer pattern](https://medium.com/@greim/a-plan-for-data-fetching-a68d171af38), which simplifies data-fetching in unidirectional data-flow apps like Elm or React/Redux.
+*Motel* is an implementation of the [vacancy observer pattern](https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb), which simplifies data-fetching in unidirectional data-flow apps like Elm or React/Redux by eliminating the need to use side-effects, hooks or lifecycle methods.
 
 ## Installation
 
@@ -66,15 +66,29 @@ const vacancies = motel();
 Match specific vacancies by pattern. Conceptually similar to URL routing.
 
  * `pattern` - Regex or string. If string, [url-pattern](https://www.npmjs.com/package/url-pattern) is used.
- * `handler(params, send)` - Callback when a vacancy matches the pattern. `params` is whatever is produced by a match against url-pattern or regex. `send` is a function you can call multiple times to stream actions to your reducer. Can be either sync or async function.
+ * `handler(params, send, exit)` - Callback when a vacancy matches the pattern.
+   * `params` is a match produced by url-pattern or regex.
+   * `send` is a function you can call multiple times to stream actions to your reducer. Can be either sync or async function.
+   * `exit` is a promise which resolves when the vacancy is no longer present. This may be useful for example if vacancy presence is used to signal a long-running subscription, rather than a one-off data fetch. The exit promise would then signal when the subscription is no longer needed and can be cleaned up.
 
 ```js
-vacancies.listen('users/:id', async function(params, send) {
-  const id = params.id;
+// HTTP fetch example
+vacancies.listen('users/:id', async ({id}, send) => {
   send({ type: 'FETCHING_USER', id });
   const resp = await fetch(`/users/${id}`);
   const user = await resp.json();
   send({ type: 'RECEIVE_USER', id, user });
+});
+```
+
+```js
+// subscription example
+vacancies.listen('users/:id', async ({id}, send, exit) => {
+  const type = 'RECEIVE_USER';
+  const subscription = websocket.connect(`/users/${id})`);
+  subscription.on('update', user => send({ type, id, user }));
+  await exit;
+  subscription.destroy();
 });
 ```
 
@@ -100,12 +114,4 @@ Subscribe to the output of the vacancy observer. The `subscriber` argument is a 
 
 ```js
 vacancies.subscribe(myReduxStore.dispatch);
-```
-
-### `Motel#publish(vacancyString)` (Method)
-
-Manually publish a vacancy, even if you haven't called `connect()`.
-
-```js
-vacancies.publish('users/u123');
 ```

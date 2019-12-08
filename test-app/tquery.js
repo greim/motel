@@ -52,6 +52,8 @@ class Selection {
       return this;
     } else if (val === undefined) {
       return this._selection[0].getAttribute(name);
+    } else if (val === null) {
+      return this._selection[0].removeAttribute(name);
     } else {
       for (const el of this._selection) {
         el.setAttribute(name, val);

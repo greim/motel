@@ -1,108 +1,104 @@
 import assertNever from './assert-never';
 
-const VACANCY_ATTRIBUTE = 'data-vacancy';
-const VACANCY_ATTRIBUTE_SELECTOR = `[${VACANCY_ATTRIBUTE}]`;
 const MUTATION_OPTS = Object.freeze({
   childList: true,
   subtree: true,
   attributes: true,
-  attributeFilter: [VACANCY_ATTRIBUTE],
 });
 
 type EventType = 'enter' | 'exit';
-type ElementFn = (el: Element) => void;
-type Mode = WaitingMode | RunningMode;
-type BacklogItem = EntranceItem | ExitItem;
-
-interface EntranceItem {
-  is: 'entrance';
-  el: Element;
-}
-
-interface ExitItem {
-  is: 'exit';
-  el: Element;
-}
+type ElementFn = (el: Element, attr: string) => void;
+type Mode = WaitingMode | RunningMode | DoneMode;
 
 interface WaitingMode {
-  running: false;
-  readonly backlog: BacklogItem[];
+  is: 'waiting';
   readonly entranceHandlers: Array<ElementFn>;
   readonly exitHandlers: Array<ElementFn>;
 }
 
 interface RunningMode {
-  running: true;
+  is: 'running';
   readonly entranceHandlers: Array<ElementFn>;
   readonly exitHandlers: Array<ElementFn>;
   readonly observer: MutationObserver;
 }
 
+interface DoneMode {
+  is: 'done';
+}
+
+/**
+ * An instance of this class tracks entrances and exits
+ * in the DOM of elements with a given attribute name
+ * and allows a listener to know when those events happen
+ * along with the attribute value corresponding to that
+ * name.
+ */
 export class ElementLifecycle {
+
+  public static of(root: Element, attr: string) {
+    return new ElementLifecycle(root, attr);
+  }
 
   private mode: Mode;
   private readonly root: Element;
+  private readonly attribute: string;
+  private readonly attributeSelector: string;
+  private readonly elements: WeakMap<Element, string>
 
-  constructor(root: Element) {
+  private constructor(root: Element, attr: string) {
+    this.attribute = attr;
+    this.attributeSelector = `[${attr}]`;
     this.root = root;
+    this.elements = new WeakMap();
     this.mode = {
-      running: false,
-      backlog: [],
+      is: 'waiting',
       entranceHandlers: [],
       exitHandlers: [],
     };
-    this.enterNode(root);
   }
 
-  public on(
-    type: EventType,
-    handler: ElementFn,
-  ): ElementLifecycle {
-    switch (type) {
-      case 'enter': {
-        this.mode.entranceHandlers.push(handler);
-        return this;
+  public on(type: EventType, handler: ElementFn): ElementLifecycle {
+    if (this.mode.is !== 'done') {
+      switch (type) {
+        case 'enter': {
+          this.mode.entranceHandlers.push(handler);
+          return this;
+        }
+        case 'exit': {
+          this.mode.exitHandlers.push(handler);
+          return this;
+        }
+        default: {
+          return assertNever(type);
+        }
       }
-      case 'exit': {
-        this.mode.exitHandlers.push(handler);
-        return this;
-      }
-      default: {
-        return assertNever(type);
-      }
+    } else {
+      throw new Error('lifecycle is finished');
     }
   }
 
-  public start() {
-    if (!this.mode.running) {
-      const {
-        backlog,
-        entranceHandlers,
-        exitHandlers,
-      } = this.mode;
-      for (const item of backlog) {
-        if (item.is === 'entrance') {
-          entranceHandlers.forEach(handler => handler(item.el));
-        } else {
-          exitHandlers.forEach(handler => handler(item.el));
-        }
-      }
+  public start(): ElementLifecycle {
+    if (this.mode.is === 'done') {
+      throw new Error('lifecycle is finished');
+    } else if (this.mode.is === 'waiting') {
+      const { entranceHandlers, exitHandlers } = this.mode;
       const observer = new MutationObserver(muts => {
         for (const mutation of muts) {
           switch (mutation.type) {
             case 'childList': {
               for (const el of mutation.removedNodes) {
-                this.exitNode(el);
+                this.exitAll(el);
               }
               for (const el of mutation.addedNodes) {
-                this.enterNode(el);
+                this.enterAll(el);
               }
               break;
             }
             case 'attributes': {
               const el = mutation.target;
               if (isElement(el)) {
-                if (el.hasAttribute(VACANCY_ATTRIBUTE)) {
+                if (el.hasAttribute(this.attribute)) {
                   this.enter(el);
                 } else {
                   this.exit(el);
@@ -113,79 +109,73 @@ export class ElementLifecycle {
           }
         }
       });
-      observer.observe(this.root, MUTATION_OPTS);
+      observer.observe(this.root, {
+        ...MUTATION_OPTS,
+        attributeFilter: [this.attribute],
+      });
       this.mode = {
-        running: true,
+        is: 'running',
         entranceHandlers,
         exitHandlers,
         observer,
       };
+      this.enterAll(this.root);
     }
+    return this;
   }
 
   public stop() {
-    if (this.mode.running) {
-      const {
-        entranceHandlers,
-        exitHandlers,
-        observer,
-      } = this.mode;
+    if (this.mode.is === 'running') {
+      const { observer } = this.mode;
       observer.disconnect();
-      this.mode = {
-        running: false,
-        backlog: [],
-        entranceHandlers,
-        exitHandlers,
-      };
+    } else {
+      this.mode = { is: 'done' };
     }
   }
 
   private enter(...els: Element[]) {
-    if (this.mode.running) {
-      for (const handler of this.mode.entranceHandlers) {
-        for (const el of els) {
-          handler(el);
+    for (const el of els) {
+      const attr = el.getAttribute(this.attribute);
+      if (attr !== null) {
+        this.elements.set(el, attr);
+        if (this.mode.is === 'running') {
+          for (const handler of this.mode.entranceHandlers) {
+            handler(el, attr);
+          }
         }
-      }
-    } else {
-      for (const el of els) {
-        const item: EntranceItem = { is: 'entrance', el };
-        this.mode.backlog.push(item);
       }
     }
   }
 
   private exit(...els: Element[]) {
-    if (this.mode.running) {
-      for (const handler of this.mode.exitHandlers) {
-        for (const el of els) {
-          handler(el);
+    for (const el of els) {
+      const attr = this.elements.get(el);
+      if (attr !== undefined) {
+        if (this.mode.is === 'running') {
+          for (const handler of this.mode.exitHandlers) {
+            handler(el, attr);
+          }
         }
-      }
-    } else {
-      for (const el of els) {
-        const item: ExitItem = { is: 'exit', el };
-        this.mode.backlog.push(item);
       }
     }
   }
 
-  private enterNode(node: Node) {
+  private enterAll(node: Node) {
     if (isElement(node)) {
-      if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
+      if (node.hasAttribute(this.attribute)) {
         this.enter(node);
       }
-      const descendantVacancies = node.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
+      const descendantVacancies = node.querySelectorAll(this.attributeSelector);
       this.enter(...descendantVacancies);
     }
   }
 
-  private exitNode(node: Node) {
+  private exitAll(node: Node) {
     if (isElement(node)) {
-      if (node.hasAttribute(VACANCY_ATTRIBUTE)) {
+      if (node.hasAttribute(this.attribute)) {
         this.exit(node);
       }
-      const descendantVacancies = node.querySelectorAll(VACANCY_ATTRIBUTE_SELECTOR);
+      const descendantVacancies = node.querySelectorAll(this.attributeSelector);
       this.exit(...descendantVacancies);
     }
   }
