@@ -1,4 +1,5 @@
 import UrlPattern from 'url-pattern';
+import assertNever from './assert-never';
 
 const VACANCY_ATTRIBUTE = 'data-vacancy';
 const VACANCY_ATTRIBUTE_SELECTOR = `[${VACANCY_ATTRIBUTE}]`;
@@ -20,12 +21,14 @@ interface PatternListener<T> {
   is: 'pattern';
   pattern: UrlPattern;
   handler: PatternHandler<T>;
+  cleanup?: () => void;
 }
 
 interface RegExpListener<T> {
   is: 'regex';
   regex: RegExp;
   handler: RegExpHandler<T>;
+  cleanup?: () => void;
 }
 
 export class Motel<T = any> {
@@ -226,10 +229,6 @@ function createPublishFunc<T>(
 
 function isElement(node: Node): node is Element {
   return node.nodeType === 1;
-}
-
-function assertNever(nope: never): never {
-  throw new Error(`value ${nope} found unexpectedly`);
 }
 
 function processMatch(match: any): PatternMatch | null {

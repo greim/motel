@@ -48,7 +48,7 @@ module.exports = {
 
     'block-scoped-var': 1, // enforce the use of variables within the scope they are defined
     'curly': 1, // enforce consistent brace style for all control statements
-    'default-case': 1, // require default cases in switch statements
+    'default-case': 0, // require default cases in switch statements
     'eqeqeq': 1, // require the use of === and !==
     'no-alert': 1, // disallow the use of alert, confirm, and prompt
     'no-caller': 1, // disallow the use of arguments.caller or arguments.callee
