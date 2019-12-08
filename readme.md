@@ -85,7 +85,7 @@ vacancies.listen('users/:id', async ({id}, send) => {
 // subscription example
 vacancies.listen('users/:id', async ({id}, send, exit) => {
   const type = 'RECEIVE_USER';
-  const subscription = websocket.connect(`/users/${id})`);
+  const subscription = websocket.connect(`/users/${id}`);
   subscription.on('update', user => send({ type, id, user }));
   await exit;
   subscription.destroy();
