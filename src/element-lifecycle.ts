@@ -34,6 +34,17 @@ interface DoneMode {
  * and allows a listener to know when those events happen
  * along with the attribute value corresponding to that
  * name.
+ *
+ * Note that any enter/exit listeners added after the
+ * start() method is called will potentially miss some
+ * events, particularly for any attributes that exist on
+ * or under root when start is called. To avoid this, add
+ * listeners first and then call start():
+ *
+ *   ElementLifecycle.of(root)
+ *     .on('enter', () => { ... })
+ *     .on('exit', () => { ... })
+ *     .start();
  */
 export class ElementLifecycle {
 
@@ -130,9 +141,8 @@ export class ElementLifecycle {
     if (this.mode.is === 'running') {
       const { observer } = this.mode;
       observer.disconnect();
-    } else {
-      this.mode = { is: 'done' };
     }
+    this.mode = { is: 'done' };
   }
 
   private enter(el: Element, attr: string) {
@@ -140,6 +150,8 @@ export class ElementLifecycle {
       for (const entranceHandler of this.mode.entranceHandlers) {
         entranceHandler(el, attr);
       }
+    } else {
+      throw new Error(`lifecycle is ${this.mode.is}`);
     }
   }
 
@@ -148,6 +160,8 @@ export class ElementLifecycle {
       for (const exitHandler of this.mode.exitHandlers) {
         exitHandler(el, attr);
       }
+    } else {
+      throw new Error(`lifecycle is ${this.mode.is}`);
     }
   }
 
