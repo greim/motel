@@ -45,8 +45,8 @@ interface RegExpListener<T> {
 
 export class Motel<T = any> {
 
-  public static create(opts: MotelOptions = {}) {
-    return new Motel(opts);
+  public static create<T = any>(opts: MotelOptions = {}) {
+    return new Motel<T>(opts);
   }
 
   private readonly debug: boolean;
