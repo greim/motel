@@ -190,11 +190,8 @@ makeTest('handles vacancy changes', async function() {
   });
   assert.deepEqual(results, [
     { id: 'foo' },
-    { id: 'bar' },
-    // the below 'done' happens out-of-sequence
-    // because the exit awaits a promise, so events
-    // that comes synchronously after it happen first.
     ['done', { id: 'foo' }],
+    { id: 'bar' },
     ['done', { id: 'bar' }],
   ]);
 });
@@ -202,10 +199,10 @@ makeTest('handles vacancy changes', async function() {
 makeTest('signals exit', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
-    el: '<i data-vacancy="users/foo"><i data-vacancy="users/bar"></i></i>',
+    el: '<i data-vacancy="users/foo"><b data-vacancy="users/bar"></b></i>',
     triggers: [
-      el => el.removeAttribute('data-vacancy'),
-      el => operate(el, 'i', sub => sub.removeAttribute('data-vacancy')),
+      el => $(el).vac(null),
+      el => $(el, 'b').vac(null),
     ],
   });
   assert.deepEqual(results, [
@@ -241,6 +238,55 @@ makeTest('Only signal exit on last', async function() {
   assert.deepEqual(results, [
     { id: 'x' },
     ['done', { id: 'x' }],
+  ]);
+});
+
+makeTest('Handles an overlapping vacancy', async function() {
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    el: `<div>
+      <b class="a" data-vacancy="users/abc"></b>
+      <b class="b"></b>
+    </div>`,
+    triggers: [
+      el => {
+        $(el, '.b').vac('users/abc');
+        $(el, '.a').vac(null);
+      },
+      el => {
+        $(el, '.b').vac(null);
+      },
+    ],
+  });
+  assert.deepEqual(results, [
+    { id: 'abc' },
+    ['done', { id: 'abc' }],
+  ]);
+});
+
+makeTest('Handles a reappearing vacancy', async function() {
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    el: `<div>
+      <b class="a" data-vacancy="users/abc"></b>
+      <b class="b"></b>
+    </div>`,
+    triggers: [
+      el => {
+        $(el, '.a').vac(null);
+        $(el, '.b').vac('users/abc');
+      },
+      el => {
+        $(el, '.b').vac(null);
+      },
+    ],
+  });
+  console.log(results)
+  assert.deepEqual(results, [
+    { id: 'abc' },
+    ['done', { id: 'abc' }],
+    { id: 'abc' },
+    ['done', { id: 'abc' }],
   ]);
 });
 
@@ -280,6 +326,7 @@ function vacancyTest({
         await wait(100);
       }
       vacancies.disconnect();
+      await wait(100);
       resolve(output);
     } catch(ex) {
       reject(ex);

@@ -85,9 +85,12 @@ export class Motel<T = any> {
 
     const gateKeeper = new GateKeeper();
     this.lifecycle = ElementLifecycle.of(elmt, VACANCY_ATTRIBUTE)
-      .on('enter', (el, vacancy) => {
+      .on('enter', async(el, vacancy) => {
         const exitProm = gateKeeper.incr(vacancy);
         if (exitProm) {
+          // exits proceed async
+          // so entrances should too
+          await tick();
           this.publish(vacancy, exitProm);
         }
       })
@@ -202,4 +205,8 @@ function processMatch(match: any): PatternMatch | null {
   } else {
     return null;
   }
+}
+
+function tick(): Promise<void> {
+  return new Promise(r => setImmediate(r));
 }
