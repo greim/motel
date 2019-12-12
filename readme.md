@@ -40,7 +40,7 @@ vacancies.listen('users/:id', async ({ id }, dispatch, exit) => {
 
   /*
    * All elements with "users/:id" dependencies
-   * have left the DOM.
+   * have now left the DOM.
    *
    * Do necessary cleanup. Unregister websockets,
    * cancel pollers, dispatch deletion actions.
@@ -72,11 +72,13 @@ vacancies.connect(document.getElementById('app-root'));
 
 /*
  * Here's a React component that renders a
- * vacancy. Think of it sort of like the
- * `src` attribute on an <img/> tag.
+ * vacancy in the form of a `data-vacancy`
+ * attribute, which you can think of sort
+ * of like a `src` attribute on an <img/>.
  */
 
-export const UserProfileWrapper = ({ id }) => {
+export const UserProfileWrapper = ({ id, users }) => {
+  const user = users[id];
   return (
     <div data-vacancy={`users/${id}`}>
       { user
@@ -112,10 +114,10 @@ Match specific vacancies by pattern.
     [url-pattern](https://www.npmjs.com/package/url-pattern)
     is used to do the matching.
  * `handler(params, dispatch, exit)` - Callback when a vacancy
-    matches the pattern. In other words, this is called when
-    a vacancy appears in the DOM that patches the `pattern`.
-    If duplicate vacancies appear, this is only called when
-    the first one it appears. Arguments:
+    matches the pattern. In other words, as your app renders over
+    time, this is called when a vacancy appears in the DOM
+    matching the given `pattern`. If duplicate vacancies appear,
+    this is only called for the first one. Callback arguments:
     * `params` is a match produced by url-pattern or regex.
     * `dispatch` is a function you can call multiple times to
       stream actions to your reducer. Can be either sync or
@@ -130,20 +132,20 @@ Match specific vacancies by pattern.
 
 ```js
 // One-off HTTP fetch example
-vacancies.listen('users/:id', async ({id}, send) => {
-  send({ type: 'FETCHING_USER', id });
+vacancies.listen('users/:id', async ({id}, dispatch) => {
+  dispatch({ type: 'FETCHING_USER', id });
   const resp = await fetch(`/users/${id}`);
   const user = await resp.json();
-  send({ type: 'RECEIVE_USER', id, user });
+  dispatch({ type: 'RECEIVE_USER', id, user });
 });
 ```
 
 ```js
 // Continuous subscription example
-vacancies.listen('users/:id', async ({id}, send, exit) => {
+vacancies.listen('users/:id', async ({id}, dispatch, exit) => {
   const type = 'RECEIVE_USER';
   const subscription = websocket.connect(`/users/${id}`)
-    .on('update', user => send({ type, id, user }));
+    .on('update', user => dispatch({ type, id, user }));
   await exit;
   subscription.cancel();
 });
