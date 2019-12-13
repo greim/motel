@@ -1,12 +1,9 @@
 # Motel
 
-Motel simplifies data-fetching in systems like Elm or React by
-eliminating use of side-effects to trigger reads on remote data
-dependencies. It uses the *vacancy observer* pattern to accomplish
-this. For more about vacancy observers and how they avoid side
-effects, visit:
-
-https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb
+Motel simplifies data-fetching in systems like Elm and React by
+eliminating the need to use side-effects to trigger remote data
+reads. To accomplish this, it uses a concept called
+[vacancy observers](https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb).
 
 ## Installation
 
