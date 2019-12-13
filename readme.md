@@ -25,18 +25,18 @@ vacancies.observe('users/:id', async ({ id }, dispatch, exit) => {
 
   /*
    * Somewhere in the DOM, one or more elements
-   * have appeared which depend on "users/:id".
+   * have declared a vacancy on "users/:id".
    *
-   * Perform data-fetching. Set up a websocket or
-   * a poller. Call your GraphQL service. Etc.
-   * Send these updates to your dispatcher by
-   * calling dispatch().
+   * Fill that vacancy by fetching data. Set up
+   * a websocket or a poller. Call your GraphQL
+   * service. Etc. Send these updates to your
+   * dispatcher by calling dispatch().
    */
 
   await exit;
 
   /*
-   * All elements depending on "users/:id" have
+   * All elements with "users/:id" vacancies have
    * now left the DOM.
    *
    * Do necessary cleanup. Unregister websockets,
