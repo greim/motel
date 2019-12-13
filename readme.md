@@ -25,8 +25,7 @@ vacancies.observe('users/:id', async ({ id }, dispatch, exit) => {
 
   /*
    * Somewhere in the DOM, one or more elements
-   * have appeared which have declared dependencies
-   * on "users/:id".
+   * have appeared which depend on "users/:id".
    *
    * Perform data-fetching. Set up a websocket or
    * a poller. Call your GraphQL service. Etc.
@@ -37,15 +36,11 @@ vacancies.observe('users/:id', async ({ id }, dispatch, exit) => {
   await exit;
 
   /*
-   * All elements which have declared dependencies
-   * on "users/:id" have now left the DOM.
+   * All elements depending on "users/:id" have
+   * now left the DOM.
    *
    * Do necessary cleanup. Unregister websockets,
    * cancel pollers, dispatch deletion actions.
-   *
-   * If any "users/:id"-dependent elements re-appear
-   * in the DOM in the future, this callback will
-   * run again.
    */
 });
 ```
