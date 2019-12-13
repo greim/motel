@@ -5,79 +5,109 @@ import { GateKeeper } from './gate-keeper';
 
 const VACANCY_ATTRIBUTE = 'data-vacancy';
 
+/**
+ * An object of key/value pairs representing a
+ * match against a vacancy.
+ */
 export interface PatternMatch {
   [key: string]: string;
 }
 
+/**
+ * Option set used when creating a Motel instance.
+ */
 export interface MotelOptions {
   debug?: boolean;
 }
 
+/**
+ * Callback function that handles an observed vacancy
+ * when a string pattern is used.
+ */
 export type PatternHandler<T> = (
   match: PatternMatch,
   send: Dispatcher<T>,
   exitProm: Promise<void>,
 ) => void | Promise<void>;
 
+/**
+ * Callback function that handles an observed vacancy
+ * when a regex pattern is used.
+ */
 export type RegExpHandler<T> = (
   match: RegExpMatchArray,
   send: Dispatcher<T>,
   exitProm: Promise<void>,
 ) => void | Promise<void>;
 
+/**
+ * Used to pass a value out of the vacancy observer
+ * to whoever has subscribed to it.
+ */
 export type Dispatcher<T> = (data: T) => void;
 
-type Listener<T> = PatternListener<T> | RegExpListener<T>;
+type Observer<T> = PatternObserver<T> | RegExpObserver<T>;
 
-interface PatternListener<T> {
+interface PatternObserver<T> {
   is: 'pattern';
   pattern: UrlPattern;
   handler: PatternHandler<T>;
   cleanup?: () => void;
 }
 
-interface RegExpListener<T> {
+interface RegExpObserver<T> {
   is: 'regex';
   regex: RegExp;
   handler: RegExpHandler<T>;
   cleanup?: () => void;
 }
 
+/**
+ * For all your vacancy observer needs.
+ */
 export class Motel<T = any> {
 
+  /** Create a new instance with the given options. */
   public static create<T = any>(opts: MotelOptions = {}) {
     return new Motel<T>(opts);
   }
 
   private readonly debug: boolean;
   private readonly send: Dispatcher<T>;
-  private readonly listeners: Listener<T>[];
+  private readonly observers: Observer<T>[];
   private readonly subscriptions: Dispatcher<T>[];
   private lifecycle?: ElementLifecycle;
 
   private constructor(opts: MotelOptions) {
     this.debug = !!opts.debug;
-    const listeners: Listener<T>[] = [];
+    const observers: Observer<T>[] = [];
     const subscriptions: Dispatcher<T>[] = [];
     const send = createPublishFunc(subscriptions, this.debug);
     this.send = send;
-    this.listeners = listeners;
+    this.observers = observers;
     this.subscriptions = subscriptions;
   }
 
-  public listen(matcher: string, handler: PatternHandler<T>): void
-  public listen(matcher: RegExp, handler: RegExpHandler<T>): void
-  public listen(matcher: string | RegExp, handler: any): void {
-    const { listeners } = this;
+  /** Observe specific vacancy patterns. */
+  public observe(matcher: string, handler: PatternHandler<T>): void
+  public observe(matcher: RegExp, handler: RegExpHandler<T>): void
+  public observe(matcher: string | RegExp, handler: any): void {
+    const { observers } = this;
     if (typeof matcher === 'string') {
       const pattern = new UrlPattern(matcher);
-      listeners.push({ is: 'pattern', pattern, handler });
+      observers.push({ is: 'pattern', pattern, handler });
     } else {
       const regex = matcher;
-      listeners.push({ is: 'regex', regex, handler });
+      observers.push({ is: 'regex', regex, handler });
     }
   }
 
+  /**
+   * Setup a MutationObserver on the given element
+   * and begin listening for vacancies. This should
+   * be called after all observers have been created,
+   * otherwise some vacancies may go unobserved.
+   */
   public connect(elmt: Element): void {
     if (this.lifecycle) {
       throw new Error('already connected');
@@ -91,7 +121,7 @@ export class Motel<T = any> {
           // exits proceed async
           // so entrances should too
           await tick();
-          this.publish(vacancy, exitProm);
+          this._publish(vacancy, exitProm);
         }
       })
       .on('exit', (el, attr) => {
@@ -100,6 +130,10 @@ export class Motel<T = any> {
       .start();
   }
 
+  /**
+   * Disconnect the MutationObserver and stop
+   * listening for vacancies.
+   */
   public disconnect(): void {
     if (!this.lifecycle) {
       throw new Error('not connected');
@@ -108,18 +142,20 @@ export class Motel<T = any> {
     delete this.lifecycle;
   }
 
+  /** Subscribe to the output of your vacancy observers. */
   public subscribe(sub: Dispatcher<T>): void {
     const { subscriptions } = this;
     subscriptions.push(sub);
   }
 
-  public publish(vacancy: string, exitProm: Promise<void>): void {
-    const { listeners, send } = this;
+  /** Publish a vacancy. */
+  public _publish(vacancy: string, exitProm: Promise<void>): void {
+    const { observers, send } = this;
     const proms = [];
-    for (let listener of listeners) {
-      switch (listener.is) {
+    for (let observer of observers) {
+      switch (observer.is) {
         case 'pattern': {
-          const { pattern, handler } = listener;
+          const { pattern, handler } = observer;
           const match = processMatch(pattern.match(vacancy));
           if (match) {
             try {
@@ -131,7 +167,7 @@ export class Motel<T = any> {
           break;
         }
         case 'regex': {
-          const { regex, handler } = listener;
+          const { regex, handler } = observer;
           const match = vacancy.match(regex);
           if (match) {
             try {
@@ -143,7 +179,7 @@ export class Motel<T = any> {
           break;
         }
         default: {
-          assertNever(listener);
+          assertNever(observer);
         }
       }
     }

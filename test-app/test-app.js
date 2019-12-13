@@ -316,7 +316,7 @@ function vacancyTest({
       el = $(el).get();
       const vacancies = Motel.create();
       const output = [];
-      vacancies.listen(pattern, handler);
+      vacancies.observe(pattern, handler);
       vacancies.subscribe(arg => output.push(arg));
       vacancies.connect(el, connectOpts);
       await trigger(el, output);

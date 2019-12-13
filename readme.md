@@ -1,11 +1,12 @@
 # Motel
 
-Motel is an implementation of the
-[vacancy observer pattern](https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb).
-It simplifies data-fetching in systems like
-Elm or React by eliminating the need to use
-side-effects, hooks or lifecycle methods to
-trigger network requests and the like.
+Motel simplifies data-fetching in systems like Elm or React by
+eliminating use of side-effects to trigger reads on remote data
+dependencies. It uses the *vacancy observer* pattern to accomplish
+this. For more about vacancy observers and how they avoid side
+effects, visit:
+
+https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb
 
 ## Installation
 
@@ -15,20 +16,20 @@ npm install motel
 
 ## Example Usage
 
-### 1. Add vacancy listeners
+### Step 1: Add observers
+
+Create a file containing your observers: `vacancies.js`
 
 ```js
-// vacancies.js
-
 import { Motel } from 'motel';
 export const vacancies = Motel.create();
 
-vacancies.listen('users/:id', async ({ id }, dispatch, exit) => {
+vacancies.observe('users/:id', async ({ id }, dispatch, exit) => {
 
   /*
    * Somewhere in the DOM, one or more elements
-   * have appeared with declared dependencies on
-   * "users/:id".
+   * have appeared which have declared dependencies
+   * on "users/:id".
    *
    * Perform data-fetching. Set up a websocket or
    * a poller. Call your GraphQL service. Etc.
@@ -39,20 +40,24 @@ vacancies.listen('users/:id', async ({ id }, dispatch, exit) => {
   await exit;
 
   /*
-   * All elements with "users/:id" dependencies
-   * have now left the DOM.
+   * All elements which have declared dependencies
+   * on "users/:id" have now left the DOM.
    *
    * Do necessary cleanup. Unregister websockets,
    * cancel pollers, dispatch deletion actions.
+   *
+   * If any "users/:id"-dependent elements re-appear
+   * in the DOM in the future, this callback will
+   * run again.
    */
 });
 ```
 
-### 2. Wire it up
+### Step 2: Wire it up
+
+Entry-point file: `main.js`
 
 ```js
-// main.js
-
 /*
  * This is some boilerplatey stuff that you
  * would do for example in your Redux app's
@@ -63,13 +68,15 @@ import vacancies from './vacancies';
 const myReduxStore = redux.createStore(...);
 vacancies.subscribe(myReduxStore.dispatch);
 vacancies.connect(document.getElementById('app-root'));
+
+// ...
 ```
 
 ### 3. Render your app
 
-```js
-// UserProfileWrapper.js
+React component: `UserProfileWrapper.js`
 
+```js
 /*
  * Here's a React component that renders a
  * vacancy in the form of a `data-vacancy`
@@ -90,12 +97,12 @@ export const UserProfileWrapper = ({ id, users }) => {
 };
 ```
 
-## API
+## API Overview
 
-Motel ships with its own TypeScript definitions, so can be
-used in both JS and TS apps.
+*TypeScript note: Motel ships with its own TypeScript definitions,
+so can be used in both JS and TS apps.*
 
-### `Motel.create()` (Factory Function)
+### `Motel.create()`
 
 Initialize a vacancy observer using this factory function.
 Type `T` represents the action type that will be dispatched
@@ -106,7 +113,7 @@ import { Motel } from 'motel';
 const vacancies = Motel.create();
 ```
 
-### `Motel#listen(pattern, handler)` (Method)
+### `Motel#observe(pattern, handler)`
 
 Match specific vacancies by pattern.
 
@@ -122,17 +129,17 @@ Match specific vacancies by pattern.
     * `dispatch` is a function you can call multiple times to
       stream actions to your reducer. Can be either sync or
       async function.
-    * `exit` is a promise which resolves when the vacancy is
-      no longer present. This may be useful for example if
-      vacancy presence is used to signal a long-running
-      subscription, rather than a one-off data fetch. The exit
-      promise would then signal when the subscription is no
-      longer needed and can be cleaned up. If duplicate vacancies
-      exist, this is only called when the last one exits the DOM.
+    * `exit` is a promise which resolves when the vacancy no
+      longer exists in the DOM. This may be useful for example
+      if a vacancy is used to create a long-running subscription,
+      rather than a one-off data fetch. The exit promise would
+      then signal when the subscription is no longer needed and
+      can be cleaned up. If duplicate vacancies exist, it resolves
+      only when the last one exits the DOM.
 
 ```js
 // One-off HTTP fetch example
-vacancies.listen('users/:id', async ({id}, dispatch) => {
+vacancies.observe('users/:id', async ({id}, dispatch) => {
   dispatch({ type: 'FETCHING_USER', id });
   const resp = await fetch(`/users/${id}`);
   const user = await resp.json();
@@ -142,7 +149,7 @@ vacancies.listen('users/:id', async ({id}, dispatch) => {
 
 ```js
 // Continuous subscription example
-vacancies.listen('users/:id', async ({id}, dispatch, exit) => {
+vacancies.observe('users/:id', async ({id}, dispatch, exit) => {
   const type = 'RECEIVE_USER';
   const subscription = websocket.connect(`/users/${id}`)
     .on('update', user => dispatch({ type, id, user }));
@@ -151,32 +158,24 @@ vacancies.listen('users/:id', async ({id}, dispatch, exit) => {
 });
 ```
 
-### `Motel#connect(root)` (Method) (DOM-Dependent)
+### `Motel#connect(root)`
 
-Call once. Start observing vacancies under the given root
-element. `root` should live at or above your app's mount
-node in the DOM tree, and otherwise not disappear over the
-life of your app.
+Call once. Setup a `MutationObserver` on the given `root`
+element. It should live at or above your app's mount node in
+the DOM tree, and otherwise not be removed from the DOM over
+the life of your app.
 
 ```js
 vacancies.connect(document.getElementById('root'));
 ```
 
-### `Motel#disconnect()` (Method) (DOM-Dependent)
-
-Stop observing vacancies.
-
-```js
-vacancies.disconnect();
-```
-
-### `Motel#subscribe(action => { ... })` (Method)
+### `Motel#subscribe(action => { ... })`
 
 Subscribe to the output of the vacancy observer. The
 `subscriber` argument is a function that will be called
-many times. Specifically, it will be called whenever a
-vacancy listener calls its `send()` function, passing
-along the argument it was called with.
+many times. Specifically, it will be called whenever an
+observer calls its `send()` function, passing along the
+argument it was called with.
 
 ```js
 vacancies.subscribe(myReduxStore.dispatch);

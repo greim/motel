@@ -31,7 +31,7 @@ interface DoneMode {
 /**
  * An instance of this class tracks entrances and exits
  * in the DOM of elements with a given attribute name
- * and allows a listener to know when those events happen
+ * and allows an observer to know when those events happen
  * along with the attribute value corresponding to that
  * name.
  *
