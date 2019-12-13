@@ -71,8 +71,8 @@ React component: `UserProfileWrapper.js`
 ```js
 /*
  * Here's a React component that renders a
- * vacancy in the form of a `data-vacancy`
- * attribute, which is sort of like a `src=""`
+ * vacancy in the form of a data-vacancy
+ * attribute, which is sort of like a src=""
  * attribute on an <img/>.
  */
 
