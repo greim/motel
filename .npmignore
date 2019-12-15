@@ -1,6 +1,8 @@
 /src/
 /test-app/
 /.vscode/
+/typedoc-theme/
+/docs/
 *.test.js
 sample.js
 tsconfig.json

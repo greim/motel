@@ -126,7 +126,7 @@ interface WildcardObserver<T> {
  * @typeparam A The output type of your vacancy observers.
  *   That is, the type of object you dispatch from your
  *   vacancy handlers. For example, in a Redux app this
- *   would be your Redux action type.
+ *   would probably be your Redux action type.
  */
 export default class Motel<A = any> {
 
