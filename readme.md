@@ -14,9 +14,9 @@ npm install motel
 
 ## API Documentation
 
-Documentation is produced using `typedoc` and is available
-under the `docs/` folder of the git repo as raw HTML, or via
-GitHub pages.
+Documentation is produced using [typedoc](https://typedoc.org/)
+and is available under the `docs/` folder of the git repo, and
+also via GitHub pages.
 
 Link: **[Full API Documentation](https://greim.github.io/motel/)**
 

@@ -119,10 +119,10 @@ interface WildcardObserver<T> {
  * This is your main API entry point to this library.
  *
  * An instance of this class manages your vacancy observers,
- * including with methods for things like adding observers
- * and listening on a DOM element. Typically the instance
- * would be created at application startup time and would
- * last for the duration of the app.
+ * including methods for adding observers and listening on a
+ * DOM element. Typically the instance would be created at
+ * application startup time and would last for the duration
+ * of the app.
  *
  * Internally, it creates a `MutationObserver` which does
  * the actual work of detecting vacancies.
