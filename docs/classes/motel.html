@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Motel</title>
+	<title>Motel | Motel API Documentation</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -17,6 +17,21 @@ ul.tsd-type-parameters h4:after {
 }
 ul.tsd-type-parameters h4:before {
     content: '<';
+}
+.readme-container {
+    position: relative;
+}
+.readme-indicate {
+    color: #ccc;
+    position: absolute;
+    top: 0em;
+    right: 0em;
+    font-weight: 100;
+    border: 1px solid;
+    border-width: 0 0 1px 1px;
+    padding: .3em .6em;
+    border-color: #ddd;
+    border-radius: 0 0 0 .2em;
 }
 </style>
 </head>
@@ -34,7 +49,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">Motel</a>
+					<a href="../index.html" class="title">Motel API Documentation</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -77,12 +92,25 @@ ul.tsd-type-parameters h4:before {
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>An instance of this manages a set of vacancy observers.
-							Typically it would be created at application startup
-							time and would last for the duration of the app.
-							Internally, it creates a <code>MutationObserver</code> which does
-						the actual work of listening for vacancies.</p>
+						<p>This is your main API entry point to this library.</p>
 					</div>
+					<p>An instance of this class manages your vacancy observers,
+						including with methods for things like adding observers
+						and listening on a DOM element. Typically the instance
+						would be created at application startup time and would
+					last for the duration of the app.</p>
+					<p>Internally, it creates a <code>MutationObserver</code> which does
+					the actual work of detecting vacancies.</p>
+					<p>For convenience, methods on this class are chainable,
+					allowing patterns like this:</p>
+					<pre><code class="language-js"><span class="hljs-keyword">const</span> vacancies = Motel.create()
+  .observe(...observer callback...)
+  .observe(...observer callback...)
+  .observe(...observer callback...)
+  .subscribe(<span class="hljs-function"><span class="hljs-params">action</span> =&gt;</span> store.dipatch(action))
+  .connect(<span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'#root'</span>));</code></pre>
+					<p>...however note that it may be better to break these
+					calls across different modules.</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-type-parameters">
@@ -92,9 +120,9 @@ ul.tsd-type-parameters h4:before {
 						<h4>A</h4>
 						<div class="tsd-comment tsd-typography">
 							<div class="lead">
-								<p>The output type of your vacancy observers.
-									That is, the type of object you dispatch from your
-									vacancy handlers. For example, in a Redux app this
+								<p>The output type of this Motel instance.
+									That is, the type of object you&#39;ll dispatch from your
+									observer callbacks. For example, in a Redux app this
 								would probably be your Redux action type.</p>
 							</div>
 						</div>
@@ -130,7 +158,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L209">index.ts:209</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L228">index.ts:228</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -164,7 +192,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L235">index.ts:235</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L254">index.ts:254</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -188,7 +216,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L165">index.ts:165</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L184">index.ts:184</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -220,7 +248,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L175">index.ts:175</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L194">index.ts:194</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -255,7 +283,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L182">index.ts:182</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L201">index.ts:201</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -296,14 +324,14 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L253">index.ts:253</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L272">index.ts:272</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Subscribe to the output of your vacancy observers.
-										Actions from all of your observers will be seen by
-									the subscriber.</p>
+									<p>Subscribe to the output of this instance. That is, a stream
+										of objects of type <code>&lt;A&gt;</code>. Every dispatched object will be
+									seen by the subscriber.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -331,7 +359,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/2a8da7c/src/index.ts#L139">index.ts:139</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/b1221a5/src/index.ts#L158">index.ts:158</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -344,7 +372,7 @@ ul.tsd-type-parameters h4:before {
 								<li>
 									<h4>A</h4>
 									<div class="tsd-comment tsd-typography">
-										<p>The type of object that you will dispatch to
+										<p>The type of object that you&#39;ll dispatch to
 										your app from your vacancy observers.</p>
 									</div>
 								</li>

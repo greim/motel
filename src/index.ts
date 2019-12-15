@@ -34,7 +34,7 @@ export interface MotelOptions {
  * A callback function that executes when a vacancy
  * matches a string pattern.
  *
- * @typeparam A The type of object that you will dispatch to your app.
+ * @typeparam A The type of object that you'll dispatch to your app.
  * @param matchObject The result of matching the vacancy with the string pattern.
  * @param dispatch Dispatches data to your app.
  * @param exit Called when all matching vacancies have left the DOM.
@@ -51,7 +51,7 @@ export interface PatternCallback<A> {
  * A callback function that executes when a vacancy
  * matches a regex pattern.
  *
- * @typeparam A The type of object that you will dispatch to your app.
+ * @typeparam A The type of object that you'll dispatch to your app.
  * @param matchArray The result of matching the vacancy with the regex.
  * @param dispatch Dispatches data to your app.
  * @param exit Called when all matching vacancies have left the DOM.
@@ -68,7 +68,7 @@ export interface RegExpCallback<A> {
  * A callback function that executes when any
  * vacancy is found.
  *
- * @typeparam A The type of object that you will dispatch to your app.
+ * @typeparam A The type of object that you'll dispatch to your app.
  * @param vacancy The vacancy that was found.
  * @param dispatch Dispatches data to your app.
  * @param exit Called when all matching vacancies have left the DOM.
@@ -82,8 +82,7 @@ export interface WildcardCallback<A> {
 }
 
 /**
- * Used to pass a value out of the vacancy observer
- * to whoever has subscribed to it.
+ * Used to dispatch an object of type `<A>` to any subscribers.
  *
  * @typeparam A The type of object to be dispatched.
  */
@@ -117,15 +116,35 @@ interface WildcardObserver<T> {
 }
 
 /**
- * An instance of this manages a set of vacancy observers.
- * Typically it would be created at application startup
- * time and would last for the duration of the app.
- * Internally, it creates a `MutationObserver` which does
- * the actual work of listening for vacancies.
+ * This is your main API entry point to this library.
  *
- * @typeparam A The output type of your vacancy observers.
- *   That is, the type of object you dispatch from your
- *   vacancy handlers. For example, in a Redux app this
+ * An instance of this class manages your vacancy observers,
+ * including with methods for things like adding observers
+ * and listening on a DOM element. Typically the instance
+ * would be created at application startup time and would
+ * last for the duration of the app.
+ *
+ * Internally, it creates a `MutationObserver` which does
+ * the actual work of detecting vacancies.
+ *
+ * For convenience, methods on this class are chainable,
+ * allowing patterns like this:
+ *
+ * ```js
+ * const vacancies = Motel.create()
+ *   .observe(...observer callback...)
+ *   .observe(...observer callback...)
+ *   .observe(...observer callback...)
+ *   .subscribe(action => store.dipatch(action))
+ *   .connect(document.querySelector('#root'));
+ * ```
+ *
+ * ...however note that it may be better to break these
+ * calls across different modules.
+ *
+ * @typeparam A The output type of this Motel instance.
+ *   That is, the type of object you'll dispatch from your
+ *   observer callbacks. For example, in a Redux app this
  *   would probably be your Redux action type.
  */
 export default class Motel<A = any> {
@@ -133,7 +152,7 @@ export default class Motel<A = any> {
   /**
    * Create a new instance with the given options.
    *
-   * @typeparam A The type of object that you will dispatch to
+   * @typeparam A The type of object that you'll dispatch to
    *   your app from your vacancy observers.
    */
   public static create<A = any>(opts: MotelOptions = {}) {
@@ -242,9 +261,9 @@ export default class Motel<A = any> {
   }
 
   /**
-   * Subscribe to the output of your vacancy observers.
-   * Actions from all of your observers will be seen by
-   * the subscriber.
+   * Subscribe to the output of this instance. That is, a stream
+   * of objects of type `<A>`. Every dispatched object will be
+   * seen by the subscriber.
    *
    * @param subscriber A callback function which receives
    *   objects of type `A` dispatched from your vacancy

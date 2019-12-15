@@ -15,18 +15,19 @@ npm install motel
 ## API Documentation
 
 Documentation is produced using `typedoc` and is available
-under the `docs/` folder of this repo as raw HTML, or via
+under the `docs/` folder of the git repo as raw HTML, or via
 GitHub pages.
 
-Link: **[Motel API Documentation](https://greim.github.io/motel/)**
+Link: **[Full API Documentation](https://greim.github.io/motel/)**
+
+## Quick Example
 
 ```js
 // basic sequence
 
 import Motel from 'motel';
 
-const vacancies = Motel
-  .create()
+const vacancies = Motel.create()
   .observe(...observer callback...)
   .observe(...observer callback...)
   .observe(...observer callback...)

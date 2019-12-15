@@ -10,7 +10,7 @@
     "lint": "eslint --max-warnings 0 src/*.ts",
     "test": "mocha -r ts-node/register ./src/**/*.ts",
     "compile": "tsc --declaration --outDir lib/",
-    "typedoc": "typedoc --out docs --excludeExternals --excludeNotExported --excludePrivate --name Motel --mode file --theme typedoc-theme src/index.ts && touch docs/.nojekyll",
+    "typedoc": "typedoc --out docs --excludeExternals --excludeNotExported --excludePrivate --name \"Motel API Documentation\" --mode file --theme typedoc-theme src/index.ts && touch docs/.nojekyll",
     "sanity": "npm run lint && npm test && npm run compile && npm run typedoc",
     "prepublish": "npm run sanity"
   },
