@@ -152,26 +152,27 @@ ul.tsd-type-parameters h4:before {
 					<a name="connect" class="tsd-anchor"></a>
 					<h3>connect</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>element<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Element</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="motel.html" class="tsd-signature-type">Motel</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>root<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Element</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="motel.html" class="tsd-signature-type">Motel</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L228">index.ts:228</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L247">index.ts:247</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Begin listening on the given element for vacancies.
-										This should only be called after all observers have
-									been created, otherwise some vacancies may be ignored.</p>
+									<p>Connect a <code>MutationObserver</code> to the given root DOM element and begin watchng for vacancies.
+										It also synchronously finds pre-existing vacancies in the root&#39;s subtree and reports them to observers.
+										Observers should thus be attached before calling this method, or some vacancies may go undetected.
+									This is especially relevant if you&#39;re using SSR.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>element: <span class="tsd-signature-type">Element</span></h5>
+									<h5>root: <span class="tsd-signature-type">Element</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Vacancies occurring on or anywhere below
 										this element will be observed.</p>
@@ -192,7 +193,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L254">index.ts:254</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L277">index.ts:277</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -216,7 +217,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L184">index.ts:184</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L199">index.ts:199</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -248,7 +249,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L194">index.ts:194</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L209">index.ts:209</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -283,7 +284,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L201">index.ts:201</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L216">index.ts:216</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -324,7 +325,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L272">index.ts:272</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L297">index.ts:297</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -359,7 +360,7 @@ ul.tsd-type-parameters h4:before {
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L158">index.ts:158</a></li>
+									<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L168">index.ts:168</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -380,7 +381,7 @@ ul.tsd-type-parameters h4:before {
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <a href="../interfaces/moteloptions.html" class="tsd-signature-type">MotelOptions</a><span class="tsd-signature-symbol"> =&nbsp;{}</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <a href="../interfaces/moteloptions.html" class="tsd-signature-type">MotelOptions</a><span class="tsd-signature-symbol"> =&nbsp;DEFAULT_OPTIONS</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="motel.html" class="tsd-signature-type">Motel</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -438,14 +439,23 @@ ul.tsd-type-parameters h4:before {
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="../interfaces/regexpcallback.html" class="tsd-kind-icon">Reg<wbr>Exp<wbr>Callback</a>
 					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/telemetryhandler.html" class="tsd-kind-icon">Telemetry<wbr>Handler</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="../interfaces/wildcardcallback.html" class="tsd-kind-icon">Wildcard<wbr>Callback</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../globals.html#exitpromise" class="tsd-kind-icon">Exit<wbr>Promise</a>
 					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../globals.html#telemetrylevel" class="tsd-kind-icon">Telemetry<wbr>Level</a>
+					</li>
 					<li class=" tsd-kind-variable">
 						<a href="../globals.html#vacancy_attribute" class="tsd-kind-icon">VACANCY_<wbr>ATTRIBUTE</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="../globals.html#consoletelemetryhandler" class="tsd-kind-icon">console<wbr>Telemetry<wbr>Handler</a>
 					</li>
 				</ul>
 			</nav>

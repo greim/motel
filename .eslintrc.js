@@ -100,6 +100,7 @@ module.exports = {
     'no-shadow-restricted-names': 1, // disallow identifiers from shadowing restricted names
     'no-undef': 2, // disallow the use of undeclared variables unless mentioned in /*global */ comments
     'no-unused-vars': 1, // disallow unused variables
+    '@typescript-eslint/no-unused-vars': ['warn'],
 
     // Node.js and CommonJS
 

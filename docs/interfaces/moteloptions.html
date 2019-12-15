@@ -103,7 +103,8 @@ ul.tsd-type-parameters h4:before {
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="moteloptions.html#debug" class="tsd-kind-icon">debug</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="moteloptions.html#telemetryhandler" class="tsd-kind-icon">telemetry<wbr>Handler</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="moteloptions.html#telemetrylevel" class="tsd-kind-icon">telemetry<wbr>Level</a></li>
 							</ul>
 						</section>
 					</div>
@@ -112,14 +113,36 @@ ul.tsd-type-parameters h4:before {
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="debug" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> debug</h3>
-					<div class="tsd-signature tsd-kind-icon">debug<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">true</span></div>
+					<a name="telemetryhandler" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> telemetry<wbr>Handler</h3>
+					<div class="tsd-signature tsd-kind-icon">telemetry<wbr>Handler<span class="tsd-signature-symbol">:</span> <a href="telemetryhandler.html" class="tsd-signature-type">TelemetryHandler</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L30">index.ts:30</a></li>
+							<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L43">index.ts:43</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Supplying this overrides the default behavior of logging to console.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="telemetrylevel" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> telemetry<wbr>Level</h3>
+					<div class="tsd-signature tsd-kind-icon">telemetry<wbr>Level<span class="tsd-signature-symbol">:</span> <a href="../globals.html#telemetrylevel" class="tsd-signature-type">TelemetryLevel</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L39">index.ts:39</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Higher levels generate less telemetry.
+								For example, use <code>&quot;warn&quot;</code> in prod, <code>&quot;debug&quot;</code> in dev.
+							The default is <code>&quot;warn&quot;</code>.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -145,7 +168,10 @@ ul.tsd-type-parameters h4:before {
 						<a href="moteloptions.html" class="tsd-kind-icon">Motel<wbr>Options</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="moteloptions.html#debug" class="tsd-kind-icon">debug</a>
+								<a href="moteloptions.html#telemetryhandler" class="tsd-kind-icon">telemetry<wbr>Handler</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="moteloptions.html#telemetrylevel" class="tsd-kind-icon">telemetry<wbr>Level</a>
 							</li>
 						</ul>
 					</li>
@@ -160,14 +186,23 @@ ul.tsd-type-parameters h4:before {
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="regexpcallback.html" class="tsd-kind-icon">Reg<wbr>Exp<wbr>Callback</a>
 					</li>
+					<li class=" tsd-kind-interface">
+						<a href="telemetryhandler.html" class="tsd-kind-icon">Telemetry<wbr>Handler</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="wildcardcallback.html" class="tsd-kind-icon">Wildcard<wbr>Callback</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../globals.html#exitpromise" class="tsd-kind-icon">Exit<wbr>Promise</a>
 					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../globals.html#telemetrylevel" class="tsd-kind-icon">Telemetry<wbr>Level</a>
+					</li>
 					<li class=" tsd-kind-variable">
 						<a href="../globals.html#vacancy_attribute" class="tsd-kind-icon">VACANCY_<wbr>ATTRIBUTE</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="../globals.html#consoletelemetryhandler" class="tsd-kind-icon">console<wbr>Telemetry<wbr>Handler</a>
 					</li>
 				</ul>
 			</nav>

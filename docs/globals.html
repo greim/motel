@@ -104,6 +104,7 @@ ul.tsd-type-parameters h4:before {
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/patterncallback.html" class="tsd-kind-icon">Pattern<wbr>Callback</a></li>
 								<li class="tsd-kind-interface"><a href="interfaces/patternmatch.html" class="tsd-kind-icon">Pattern<wbr>Match</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/regexpcallback.html" class="tsd-kind-icon">Reg<wbr>Exp<wbr>Callback</a></li>
+								<li class="tsd-kind-interface"><a href="interfaces/telemetryhandler.html" class="tsd-kind-icon">Telemetry<wbr>Handler</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/wildcardcallback.html" class="tsd-kind-icon">Wildcard<wbr>Callback</a></li>
 							</ul>
 						</section>
@@ -111,12 +112,19 @@ ul.tsd-type-parameters h4:before {
 							<h3>Type aliases</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-type-alias"><a href="globals.html#exitpromise" class="tsd-kind-icon">Exit<wbr>Promise</a></li>
+								<li class="tsd-kind-type-alias"><a href="globals.html#telemetrylevel" class="tsd-kind-icon">Telemetry<wbr>Level</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-variable"><a href="globals.html#vacancy_attribute" class="tsd-kind-icon">VACANCY_<wbr>ATTRIBUTE</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function"><a href="globals.html#consoletelemetryhandler" class="tsd-kind-icon">console<wbr>Telemetry<wbr>Handler</a></li>
 							</ul>
 						</section>
 					</div>
@@ -130,15 +138,25 @@ ul.tsd-type-parameters h4:before {
 					<div class="tsd-signature tsd-kind-icon">Exit<wbr>Promise<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L13">index.ts:13</a></li>
+							<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L19">index.ts:19</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>A promise which resolves when all vacancies matching
+							<p>A promise that resolves when all vacancies matching
 							a given pattern have disappeared from the DOM.</p>
 						</div>
 					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias">
+					<a name="telemetrylevel" class="tsd-anchor"></a>
+					<h3>Telemetry<wbr>Level</h3>
+					<div class="tsd-signature tsd-kind-icon">Telemetry<wbr>Level<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"debug"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"warn"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"error"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"critical"</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in telemetry.ts:10</li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -149,7 +167,7 @@ ul.tsd-type-parameters h4:before {
 					<div class="tsd-signature tsd-kind-icon">VACANCY_<wbr>ATTRIBUTE<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"data-vacancy"</span><span class="tsd-signature-symbol"> =&nbsp;&quot;data-vacancy&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greim/motel/blob/e0e9885/src/index.ts#L7">index.ts:7</a></li>
+							<li>Defined in <a href="https://github.com/greim/motel/blob/5760a1f/src/index.ts#L8">index.ts:8</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -157,6 +175,38 @@ ul.tsd-type-parameters h4:before {
 							<p>The name of the vacancy attribute.</p>
 						</div>
 					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="consoletelemetryhandler" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> console<wbr>Telemetry<wbr>Handler</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">console<wbr>Telemetry<wbr>Handler<span class="tsd-signature-symbol">(</span>isError<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, <span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in telemetry.ts:40</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>isError: <span class="tsd-signature-type">boolean</span></h5>
+								</li>
+								<li>
+									<h5>message: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>args: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -188,14 +238,23 @@ ul.tsd-type-parameters h4:before {
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="interfaces/regexpcallback.html" class="tsd-kind-icon">Reg<wbr>Exp<wbr>Callback</a>
 					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/telemetryhandler.html" class="tsd-kind-icon">Telemetry<wbr>Handler</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="interfaces/wildcardcallback.html" class="tsd-kind-icon">Wildcard<wbr>Callback</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="globals.html#exitpromise" class="tsd-kind-icon">Exit<wbr>Promise</a>
 					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="globals.html#telemetrylevel" class="tsd-kind-icon">Telemetry<wbr>Level</a>
+					</li>
 					<li class=" tsd-kind-variable">
 						<a href="globals.html#vacancy_attribute" class="tsd-kind-icon">VACANCY_<wbr>ATTRIBUTE</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#consoletelemetryhandler" class="tsd-kind-icon">console<wbr>Telemetry<wbr>Handler</a>
 					</li>
 				</ul>
 			</nav>

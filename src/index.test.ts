@@ -1,4 +1,4 @@
-import Motel from '.';
+import Motel, { MotelOptions } from '.';
 import assert from 'assert';
 import sinon from 'sinon';
 
@@ -30,14 +30,14 @@ describe('motel', () => {
     describe('observe', () => {
 
       it('accepts regex and handler', () => {
-        const m = Motel.create();
+        const m = Motel.create(OPTS);
         const pattern = /foo/;
         const handler = () => {};
         m.observe(pattern, handler);
       });
 
       it('accepts string and handler', () => {
-        const m = Motel.create();
+        const m = Motel.create(OPTS);
         const pattern = 'foo:bar';
         const handler = () => {};
         m.observe(pattern, handler);
@@ -47,7 +47,7 @@ describe('motel', () => {
     describe('subscribe', () => {
 
       it('accepts a function', () => {
-        const m = Motel.create();
+        const m = Motel.create(OPTS);
         const sub = () => {};
         m.subscribe(sub);
       });
@@ -56,14 +56,14 @@ describe('motel', () => {
     describe('_publish', () => {
 
       it('accepts a string', () => {
-        const m = Motel.create();
+        const m = Motel.create(OPTS);
         const dataVacancy = 'sdfsdf';
         return m._publish(dataVacancy, alrighty);
       });
     });
 
     it('publishes on match', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe(/foo/, spy);
       await m._publish('foo', alrighty);
@@ -71,7 +71,7 @@ describe('motel', () => {
     });
 
     it('does not publish on no match', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe(/foo/, spy);
       await m._publish('bar', alrighty);
@@ -79,7 +79,7 @@ describe('motel', () => {
     });
 
     it('does not dedupe non-simultaneous', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe(/foo/, spy);
       await m._publish('foo', alrighty);
@@ -88,7 +88,7 @@ describe('motel', () => {
     });
 
     it('passes a match array for regex', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe(/fo(o)/, spy);
       await m._publish('foo', alrighty);
@@ -98,7 +98,7 @@ describe('motel', () => {
     });
 
     it('passes a match object for string pattern', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe('users[:id]', spy);
       await m._publish('users[abc]', alrighty);
@@ -107,7 +107,7 @@ describe('motel', () => {
     });
 
     it('gives string for first if dupe', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe('foo/:bar/:bar', spy);
       await m._publish('foo/bar/baz', alrighty);
@@ -116,7 +116,7 @@ describe('motel', () => {
     });
 
     it('notifies subscribers', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe(/fo(o)/, (mat, send) => send(123));
       m.subscribe(spy);
@@ -126,7 +126,7 @@ describe('motel', () => {
     });
 
     it('notifies multiple subscribers', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy();
       m.observe(/fo(o)/, (mat, send) => send(123));
       m.subscribe(spy);
@@ -137,7 +137,7 @@ describe('motel', () => {
     });
 
     it('recovers from vacancy handler sync error', () => {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       m.observe(/foo/, () => {
         throw new Error('fake');
       });
@@ -145,13 +145,13 @@ describe('motel', () => {
     });
 
     it('recovers from vacancy handler async error', () => {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       m.observe(/foo/, () => Promise.reject(new Error('fake')));
       return m._publish('foo', alrighty);
     });
 
     it('recovers from subscribe handler sync error', () => {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       m.observe(/foo/, (mat, send) => send('abc'));
       m.subscribe(() => {
         throw new Error('fake');
@@ -160,7 +160,7 @@ describe('motel', () => {
     });
 
     it('recovers from subscribe handler async error', () => {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       m.observe(/foo/, (mat, send) => send('abc'));
       m.subscribe(() => {
         const err: any = new Error('fake');
@@ -171,7 +171,7 @@ describe('motel', () => {
     });
 
     it('subscribe handler sync error wont halt notifications', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy(() => { throw new Error('fake'); });
       m.observe(/foo/, (mat, send) => send('abc'));
       m.subscribe(spy);
@@ -181,7 +181,7 @@ describe('motel', () => {
     });
 
     it('subscribe handler async error wont halt notifications', async function() {
-      const m = Motel.create();
+      const m = Motel.create(OPTS);
       const spy = sinon.spy(() => {
         const err: any = new Error('fake');
         err.isFake = true;
@@ -195,3 +195,8 @@ describe('motel', () => {
     });
   });
 });
+
+const OPTS: MotelOptions = {
+  telemetryLevel: 'debug',
+  telemetryHandler: () => {},
+};

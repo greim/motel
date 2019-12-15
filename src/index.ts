@@ -2,22 +2,26 @@ import UrlPattern from 'url-pattern';
 import assertNever from './assert-never';
 import { ElementLifecycle } from './element-lifecycle';
 import { GateKeeper } from './gate-keeper';
+import Telemetry, { TelemetryLevel, TelemetryHandler, consoleTelemetryHandler } from './telemetry';
 
 /** The name of the vacancy attribute. */
 export const VACANCY_ATTRIBUTE = 'data-vacancy';
 
+const DEFAULT_OPTIONS = {
+  telemetryLevel: 'warn',
+  telemetryHandler: consoleTelemetryHandler,
+} as const;
+
 /**
- * A promise which resolves when all vacancies matching
+ * A promise that resolves when all vacancies matching
  * a given pattern have disappeared from the DOM.
  */
 export type ExitPromise = Promise<void>;
 
 /**
- * An object of key/value pairs representing a
- * match against a vacancy. For example, since
- * the vacancy `"users/123"` matches the pattern
- * `"users/:id"`, the match object would look like
- * this: `{ id: '123' }`
+ * Key/value pairs representing a match against a vacancy.
+ * For example, the vacancy `"users/123"` matches the pattern `"users/:id"`.
+ * The corresponding match object would look like this: `{ id: '123' }`.
  */
 export interface PatternMatch {
   [key: string]: string;
@@ -27,12 +31,20 @@ export interface PatternMatch {
  * Options used when creating a Motel instance.
  */
 export interface MotelOptions {
-  debug?: boolean;
+  /**
+   * Higher levels generate less telemetry.
+   * For example, use `"warn"` in prod, `"debug"` in dev.
+   * The default is `"warn"`.
+   */
+  telemetryLevel?: TelemetryLevel;
+  /**
+   * Supplying this overrides the default behavior of logging to console.
+   */
+  telemetryHandler?: TelemetryHandler;
 }
 
 /**
- * A callback function that executes when a vacancy
- * matches a string pattern.
+ * Callback that executes when a vacancy matches a string pattern.
  *
  * @typeparam A The type of object that you'll dispatch to your app.
  * @param matchObject The result of matching the vacancy with the string pattern.
@@ -48,8 +60,7 @@ export interface PatternCallback<A> {
 }
 
 /**
- * A callback function that executes when a vacancy
- * matches a regex pattern.
+ * Callback that executes when a vacancy matches a regex pattern.
  *
  * @typeparam A The type of object that you'll dispatch to your app.
  * @param matchArray The result of matching the vacancy with the regex.
@@ -65,8 +76,7 @@ export interface RegExpCallback<A> {
 }
 
 /**
- * A callback function that executes when any
- * vacancy is found.
+ * Callback that executes when any vacancy is found.
  *
  * @typeparam A The type of object that you'll dispatch to your app.
  * @param vacancy The vacancy that was found.
@@ -155,24 +165,29 @@ export default class Motel<A = any> {
    * @typeparam A The type of object that you'll dispatch to
    *   your app from your vacancy observers.
    */
-  public static create<A = any>(opts: MotelOptions = {}) {
+  public static create<A = any>(opts: MotelOptions = DEFAULT_OPTIONS) {
     return new Motel<A>(opts);
   }
 
-  private readonly debug: boolean;
+  private readonly telemetry: Telemetry;
   private readonly send: Dispatcher<A>;
   private readonly observers: Observer<A>[];
   private readonly subscriptions: Dispatcher<A>[];
   private lifecycle?: ElementLifecycle;
 
   private constructor(opts: MotelOptions) {
-    this.debug = !!opts.debug;
+    const allOpts = { ...DEFAULT_OPTIONS, ...opts };
+    this.telemetry = new Telemetry(
+      allOpts.telemetryLevel,
+      allOpts.telemetryHandler,
+    );
     const observers: Observer<A>[] = [];
     const subscriptions: Dispatcher<A>[] = [];
-    const send = createPublishFunc(subscriptions, this.debug);
+    const send = createPublishFunc(subscriptions, this.telemetry);
     this.send = send;
     this.observers = observers;
     this.subscriptions = subscriptions;
+    this.telemetry.send('debug', 'instance created');
   }
 
   /**
@@ -206,33 +221,40 @@ export default class Motel<A = any> {
   public observe(matcher: string | RegExp, handler: any): Motel<A> {
     const { observers } = this;
     if (matcher === '*') {
+      this.telemetry.send('debug', 'adding wildcard observer');
       observers.push({ is: 'wildcard', handler });
     } else if (typeof matcher === 'string') {
       const pattern = new UrlPattern(matcher);
+      this.telemetry.send('debug', `adding string pattern observer: ${matcher}`);
       observers.push({ is: 'pattern', pattern, handler });
     } else {
       const regex = matcher;
+      this.telemetry.send('debug', `adding regex observer: ${regex}`);
       observers.push({ is: 'regex', regex, handler });
     }
     return this;
   }
 
   /**
-   * Begin listening on the given element for vacancies.
-   * This should only be called after all observers have
-   * been created, otherwise some vacancies may be ignored.
+   * Connect a `MutationObserver` to the given root DOM element and begin watchng for vacancies.
+   * It also synchronously finds pre-existing vacancies in the root's subtree and reports them to observers.
+   * Observers should thus be attached before calling this method, or some vacancies may go undetected.
+   * This is especially relevant if you're using SSR.
    *
-   * @param element Vacancies occurring on or anywhere below
+   * @param root Vacancies occurring on or anywhere below
    *   this element will be observed.
    */
-  public connect(element: Element): Motel<A> {
+  public connect(root: Element): Motel<A> {
     if (this.lifecycle) {
-      throw new Error('already connected');
+      this.telemetry.send('error', 'instance is already connected');
+      return this;
     }
 
+    this.telemetry.send('debug', 'connecting instance to DOM');
     const gateKeeper = new GateKeeper();
-    this.lifecycle = ElementLifecycle.of(element, VACANCY_ATTRIBUTE)
+    this.lifecycle = ElementLifecycle.of(root, VACANCY_ATTRIBUTE)
       .on('enter', async(el, vacancy) => {
+        this.telemetry.send('debug', `incrementing vacancy: ${vacancy}`);
         const exitProm = gateKeeper.incr(vacancy);
         if (exitProm) {
           // exits proceed async
@@ -241,8 +263,9 @@ export default class Motel<A = any> {
           this._publish(vacancy, exitProm);
         }
       })
-      .on('exit', (el, attr) => {
-        gateKeeper.decr(attr);
+      .on('exit', (el, vacancy) => {
+        this.telemetry.send('debug', `decrementing vacancy: ${vacancy}`);
+        gateKeeper.decr(vacancy);
       })
       .start();
     return this;
@@ -253,8 +276,10 @@ export default class Motel<A = any> {
    */
   public disconnect(): Motel<A> {
     if (!this.lifecycle) {
-      throw new Error('not connected');
+      this.telemetry.send('error', 'instance is not connected');
+      return this;
     }
+    this.telemetry.send('debug', 'disconnecting instance');
     this.lifecycle.stop();
     delete this.lifecycle;
     return this;
@@ -270,6 +295,7 @@ export default class Motel<A = any> {
    *   observers.
    */
   public subscribe(subscriber: Dispatcher<A>): Motel<A> {
+    this.telemetry.send('debug', 'adding subscriber');
     const { subscriptions } = this;
     subscriptions.push(subscriber);
     return this;
@@ -277,12 +303,16 @@ export default class Motel<A = any> {
 
   /** @hidden */
   _publish(vacancy: string, exitProm: Promise<void>): void {
+    this.telemetry.send('debug', `entering vacancy: ${vacancy}`);
+    exitProm.then(() =>
+      this.telemetry.send('debug', `exiting vacancy: ${vacancy}`));
     const { observers, send } = this;
     const proms: Array<Promise<void> | void> = [];
     for (let observer of observers) {
       switch (observer.is) {
         case 'wildcard': {
           const { handler } = observer;
+          this.telemetry.send('debug', `handling wildcard vacancy: ${vacancy}`);
           try { proms.push(handler(vacancy, send, exitProm)); }
           catch(ex) { proms.push(Promise.reject(ex)); }
           break;
@@ -291,6 +321,7 @@ export default class Motel<A = any> {
           const { pattern, handler } = observer;
           const match = processMatch(pattern.match(vacancy));
           if (match) {
+            this.telemetry.send('debug', `handling string pattern vacancy: ${vacancy}`, match);
             try { proms.push(handler(match, send, exitProm)); }
             catch(ex) { proms.push(Promise.reject(ex)); }
           }
@@ -300,52 +331,37 @@ export default class Motel<A = any> {
           const { regex, handler } = observer;
           const match = vacancy.match(regex);
           if (match) {
+            this.telemetry.send('debug', `handling regex vacancy: ${vacancy}`, match);
             try { proms.push(handler(match, send, exitProm)); }
             catch(ex) { proms.push(Promise.reject(ex)); }
           }
           break;
         }
         default: {
+          this.telemetry.send('critical', 'untyped observer', observer);
           assertNever(observer);
         }
       }
     }
     if (proms.length === 0) {
-      if (this.debug) {
-        logError(`unhandled vacancy: ${JSON.stringify(vacancy)}`);
-      }
+      this.telemetry.send('warn', `unobserved vacancy: ${vacancy}`);
     }
-    const catcher = this.debug ? noisyCatcher : silentCatcher;
-    Promise.all(proms).catch(catcher);
-  }
-}
-
-function noisyCatcher<E extends Error>(err: E) {
-  logError(err.stack);
-}
-
-// eslint-disable-next-line no-unused-vars
-function silentCatcher<E extends Error>(err: E) {
-}
-
-function logError(...args: any[]): void {
-  if (typeof console !== 'undefined') {
-    // eslint-disable-next-line no-unused-expressions
-    console?.error(...args);
+    Promise.all(proms).catch(err =>
+      this.telemetry.send('error', `error while handling vacancy: ${vacancy}`, err));
   }
 }
 
 function createPublishFunc<T>(
   subscriptions: Dispatcher<T>[],
-  debug: boolean,
+  telemetry: Telemetry,
 ): Dispatcher<T> {
   return (action: T) => {
-    const catcher = debug ? noisyCatcher : silentCatcher;
     for (let sub of subscriptions) {
       try {
+        telemetry.send('debug', 'publishing action', action);
         sub(action);
       } catch(ex) {
-        catcher(ex);
+        telemetry.send('error', 'error while publishing action', ex);
       }
     }
   };
