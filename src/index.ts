@@ -3,118 +3,217 @@ import assertNever from './assert-never';
 import { ElementLifecycle } from './element-lifecycle';
 import { GateKeeper } from './gate-keeper';
 
-const VACANCY_ATTRIBUTE = 'data-vacancy';
+/** The name of the vacancy attribute. */
+export const VACANCY_ATTRIBUTE = 'data-vacancy';
+
+/**
+ * A promise which resolves when all vacancies matching
+ * a given pattern have disappeared from the DOM.
+ * @typeparam
+ */
+export type ExitPromise = Promise<void>;
 
 /**
  * An object of key/value pairs representing a
- * match against a vacancy.
+ * match against a vacancy. For example, since
+ * the vacancy `"users/123"` matches the pattern
+ * `"users/:id"`, the match object would look like
+ * this: `{ id: '123' }`
  */
 export interface PatternMatch {
   [key: string]: string;
 }
 
 /**
- * Option set used when creating a Motel instance.
+ * Options used when creating a Motel instance.
  */
 export interface MotelOptions {
   debug?: boolean;
 }
 
 /**
- * Callback function that handles an observed vacancy
- * when a string pattern is used.
+ * A callback function that executes when a vacancy
+ * matches a string pattern.
+ *
+ * @typeparam A The type of object that you will dispatch to your app.
+ * @param matchObject The result of matching the vacancy with the string pattern.
+ * @param dispatch Dispatches data to your app.
+ * @param exit Called when all matching vacancies have left the DOM.
  */
-export type PatternHandler<T> = (
-  match: PatternMatch,
-  send: Dispatcher<T>,
-  exitProm: Promise<void>,
-) => void | Promise<void>;
+export interface PatternCallback<A> {
+  (
+    matchObject: PatternMatch,
+    dispatch: Dispatcher<A>,
+    exit: ExitPromise,
+  ): void | Promise<void>;
+}
 
 /**
- * Callback function that handles an observed vacancy
- * when a regex pattern is used.
+ * A callback function that executes when a vacancy
+ * matches a regex pattern.
+ *
+ * @typeparam A The type of object that you will dispatch to your app.
+ * @param matchArray The result of matching the vacancy with the regex.
+ * @param dispatch Dispatches data to your app.
+ * @param exit Called when all matching vacancies have left the DOM.
  */
-export type RegExpHandler<T> = (
-  match: RegExpMatchArray,
-  send: Dispatcher<T>,
-  exitProm: Promise<void>,
-) => void | Promise<void>;
+export interface RegExpCallback<A> {
+  (
+    matchArray: RegExpMatchArray,
+    dispatch: Dispatcher<A>,
+    exit: ExitPromise,
+  ): void | Promise<void>;
+}
+
+/**
+ * A callback function that executes when any
+ * vacancy is found.
+ *
+ * @typeparam A The type of object that you will dispatch to your app.
+ * @param vacancy The vacancy that was found.
+ * @param dispatch Dispatches data to your app.
+ * @param exit Called when all matching vacancies have left the DOM.
+ */
+export interface WildcardCallback<A> {
+  (
+    vacancy: string,
+    dispatch: Dispatcher<A>,
+    exit: ExitPromise,
+  ): void | Promise<void>;
+}
 
 /**
  * Used to pass a value out of the vacancy observer
  * to whoever has subscribed to it.
+ *
+ * @typeparam A The type of object to be dispatched.
  */
-export type Dispatcher<T> = (data: T) => void;
+export interface Dispatcher<A> {
+  (action: A): void;
+}
 
-type Observer<T> = PatternObserver<T> | RegExpObserver<T>;
+type Observer<T>
+  = PatternObserver<T>
+  | RegExpObserver<T>
+  | WildcardObserver<T>;
 
 interface PatternObserver<T> {
   is: 'pattern';
   pattern: UrlPattern;
-  handler: PatternHandler<T>;
+  handler: PatternCallback<T>;
   cleanup?: () => void;
 }
 
 interface RegExpObserver<T> {
   is: 'regex';
   regex: RegExp;
-  handler: RegExpHandler<T>;
+  handler: RegExpCallback<T>;
+  cleanup?: () => void;
+}
+
+interface WildcardObserver<T> {
+  is: 'wildcard';
+  handler: WildcardCallback<T>;
   cleanup?: () => void;
 }
 
 /**
- * For all your vacancy observer needs.
+ * An instance of this manages a set of vacancy observers.
+ * Typically it would be created at application startup
+ * time and would last for the duration of the app.
+ * Internally, it creates a `MutationObserver` which does
+ * the actual work of listening for vacancies.
+ *
+ * @typeparam A The output type of your vacancy observers.
+ *   That is, the type of object you dispatch from your
+ *   vacancy handlers. For example, in a Redux app this
+ *   would be your Redux action type.
  */
-export class Motel<T = any> {
+export default class Motel<A = any> {
 
-  /** Create a new instance with the given options. */
-  public static create<T = any>(opts: MotelOptions = {}) {
-    return new Motel<T>(opts);
+  /**
+   * Create a new instance with the given options.
+   *
+   * @typeparam A The type of object that you will dispatch to
+   *   your app from your vacancy observers.
+   */
+  public static create<A = any>(opts: MotelOptions = {}) {
+    return new Motel<A>(opts);
   }
 
   private readonly debug: boolean;
-  private readonly send: Dispatcher<T>;
-  private readonly observers: Observer<T>[];
-  private readonly subscriptions: Dispatcher<T>[];
+  private readonly send: Dispatcher<A>;
+  private readonly observers: Observer<A>[];
+  private readonly subscriptions: Dispatcher<A>[];
   private lifecycle?: ElementLifecycle;
 
   private constructor(opts: MotelOptions) {
     this.debug = !!opts.debug;
-    const observers: Observer<T>[] = [];
-    const subscriptions: Dispatcher<T>[] = [];
+    const observers: Observer<A>[] = [];
+    const subscriptions: Dispatcher<A>[] = [];
     const send = createPublishFunc(subscriptions, this.debug);
     this.send = send;
     this.observers = observers;
     this.subscriptions = subscriptions;
   }
 
-  /** Observe specific vacancy patterns. */
-  public observe(matcher: string, handler: PatternHandler<T>): void
-  public observe(matcher: RegExp, handler: RegExpHandler<T>): void
-  public observe(matcher: string | RegExp, handler: any): void {
+  /**
+   * Create a wildcard observer that sees every vacancy.
+   *
+   * @param wildcard The special `"*"` string, which represents
+   *   a pattern that matches everything.
+   */
+  public observe(wildcard: '*', handler: WildcardCallback<A>): Motel<A>
+  /**
+   * Create an observer that matches vacancies based on the
+   * given string pattern. Pattern matching follows the rules of
+   * a [UrlPattern](https://www.npmjs.com/package/url-pattern)
+   * object.
+   *
+   * @param stringPattern A pattern string as described
+   *   [here](https://www.npmjs.com/package/url-pattern).
+   */
+  public observe(stringPattern: string, handler: PatternCallback<A>): Motel<A>
+  /**
+   * Create an observer that matches vacancies based on a regex.
+   *
+   * @param regex A pattern string as described
+   *   [here](https://www.npmjs.com/package/url-pattern).
+   */
+  public observe(regex: RegExp, handler: RegExpCallback<A>): Motel<A>
+  /**
+   * @param handler A callback function that runs whenever
+   *   a vacancy is found.
+   */
+  public observe(matcher: string | RegExp, handler: any): Motel<A> {
     const { observers } = this;
-    if (typeof matcher === 'string') {
+    if (matcher === '*') {
+      observers.push({ is: 'wildcard', handler });
+    } else if (typeof matcher === 'string') {
       const pattern = new UrlPattern(matcher);
       observers.push({ is: 'pattern', pattern, handler });
     } else {
       const regex = matcher;
       observers.push({ is: 'regex', regex, handler });
     }
+    return this;
   }
 
   /**
-   * Setup a MutationObserver on the given element
-   * and begin listening for vacancies. This should
-   * be called after all observers have been created,
-   * otherwise some vacancies may go unobserved.
+   * Begin listening on the given element for vacancies.
+   * This should only be called after all observers have
+   * been created, otherwise some vacancies may be ignored.
+   *
+   * @param element Vacancies occurring on or anywhere below
+   *   this element will be observed.
    */
-  public connect(elmt: Element): void {
+  public connect(element: Element): Motel<A> {
     if (this.lifecycle) {
       throw new Error('already connected');
     }
 
     const gateKeeper = new GateKeeper();
-    this.lifecycle = ElementLifecycle.of(elmt, VACANCY_ATTRIBUTE)
+    this.lifecycle = ElementLifecycle.of(element, VACANCY_ATTRIBUTE)
       .on('enter', async(el, vacancy) => {
         const exitProm = gateKeeper.incr(vacancy);
         if (exitProm) {
@@ -128,41 +227,54 @@ export class Motel<T = any> {
         gateKeeper.decr(attr);
       })
       .start();
+    return this;
   }
 
   /**
-   * Disconnect the MutationObserver and stop
-   * listening for vacancies.
+   * Stop listening for vacancies.
    */
-  public disconnect(): void {
+  public disconnect(): Motel<A> {
     if (!this.lifecycle) {
       throw new Error('not connected');
     }
     this.lifecycle.stop();
     delete this.lifecycle;
+    return this;
   }
 
-  /** Subscribe to the output of your vacancy observers. */
-  public subscribe(sub: Dispatcher<T>): void {
+  /**
+   * Subscribe to the output of your vacancy observers.
+   * Actions from all of your observers will be seen by
+   * the subscriber.
+   *
+   * @param subscriber A callback function which receives
+   *   objects of type `A` dispatched from your vacancy
+   *   observers.
+   */
+  public subscribe(subscriber: Dispatcher<A>): Motel<A> {
     const { subscriptions } = this;
-    subscriptions.push(sub);
+    subscriptions.push(subscriber);
+    return this;
   }
 
-  /** Publish a vacancy. */
-  public _publish(vacancy: string, exitProm: Promise<void>): void {
+  /** @hidden */
+  _publish(vacancy: string, exitProm: Promise<void>): void {
     const { observers, send } = this;
-    const proms = [];
+    const proms: Array<Promise<void> | void> = [];
     for (let observer of observers) {
       switch (observer.is) {
+        case 'wildcard': {
+          const { handler } = observer;
+          try { proms.push(handler(vacancy, send, exitProm)); }
+          catch(ex) { proms.push(Promise.reject(ex)); }
+          break;
+        }
         case 'pattern': {
           const { pattern, handler } = observer;
           const match = processMatch(pattern.match(vacancy));
           if (match) {
-            try {
-              proms.push(Promise.resolve(handler(match, send, exitProm)));
-            } catch(ex) {
-              proms.push(Promise.reject(ex));
-            }
+            try { proms.push(handler(match, send, exitProm)); }
+            catch(ex) { proms.push(Promise.reject(ex)); }
           }
           break;
         }
@@ -170,11 +282,8 @@ export class Motel<T = any> {
           const { regex, handler } = observer;
           const match = vacancy.match(regex);
           if (match) {
-            try {
-              proms.push(Promise.resolve(handler(match, send, exitProm)));
-            } catch(ex) {
-              proms.push(Promise.reject(ex));
-            }
+            try { proms.push(handler(match, send, exitProm)); }
+            catch(ex) { proms.push(Promise.reject(ex)); }
           }
           break;
         }

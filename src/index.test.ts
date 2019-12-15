@@ -1,4 +1,4 @@
-import { Motel } from '.';
+import Motel from '.';
 import assert from 'assert';
 import sinon from 'sinon';
 

@@ -108,7 +108,7 @@ module.exports = {
 
     // Stylistic Issues
 
-    'brace-style': [1, "1tbs", { "allowSingleLine":true }], // enforce consistent brace style for blocks
+    // 'brace-style': [1, "1tbs", { "allowSingleLine":true }], // enforce consistent brace style for blocks
     'camelcase': [1, { "properties":"never" }], // enforce camelcase naming convention
     'comma-dangle': [1, "always-multiline"], // require or disallow trailing commas
     'comma-spacing': 1, // enforce consistent spacing before and after commas

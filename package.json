@@ -1,6 +1,6 @@
 {
   "name": "motel",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "description": "data-vacancy observer",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -10,7 +10,8 @@
     "lint": "eslint --max-warnings 0 src/*.ts",
     "test": "mocha -r ts-node/register ./src/**/*.ts",
     "compile": "tsc --declaration --outDir lib/",
-    "sanity": "npm run lint && npm test && npm run compile",
+    "typedoc": "typedoc --out docs --excludeExternals --excludeNotExported --excludePrivate src/index.ts",
+    "sanity": "npm run lint && npm test && npm run compile && npm run typedoc",
     "prepublish": "npm run sanity"
   },
   "keywords": [
@@ -33,6 +34,7 @@
     "serve-here": "^3.2.0",
     "sinon": "^2.1.0",
     "ts-node": "^8.5.4",
+    "typedoc": "^0.15.4",
     "typescript": "^3.7.3"
   },
   "dependencies": {

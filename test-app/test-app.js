@@ -1,4 +1,4 @@
-const { Motel } = require('../lib/index');
+const Motel = require('../lib/index').default;
 const makeTest = require('./make-test');
 const assert = require('assert');
 const $ = require('./tquery');
@@ -287,6 +287,20 @@ makeTest('Handles a reappearing vacancy', async function() {
     ['done', { id: 'abc' }],
     { id: 'abc' },
     ['done', { id: 'abc' }],
+  ]);
+});
+
+makeTest('Handles a wildcard vacancy', async function() {
+  const results = await vacancyTest({
+    pattern: '*',
+    el: `<div>
+      <b class="a" data-vacancy="users/abc"></b>
+      <b class="b"></b>
+    </div>`,
+  });
+  console.log(results)
+  assert.deepEqual(results, [
+    'users/abc',
   ]);
 });
 
