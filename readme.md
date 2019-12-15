@@ -21,6 +21,8 @@ GitHub pages.
 Link: **[Motel API Documentation](https://greim.github.io/motel/)**
 
 ```js
+// basic sequence
+
 import Motel from 'motel';
 
 const vacancies = Motel
@@ -28,5 +30,6 @@ const vacancies = Motel
   .observe(...observer callback...)
   .observe(...observer callback...)
   .observe(...observer callback...)
+  .subscribe(action => store.dipatch(action))
   .connect(document.querySelector('#root'));
 ```

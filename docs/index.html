@@ -78,13 +78,16 @@
 					under the <code>docs/</code> folder of this repo as raw HTML, or via
 				GitHub pages.</p>
 				<p>Link: <strong><a href="https://greim.github.io/motel/">Motel API Documentation</a></strong></p>
-				<pre><code class="language-js"><span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">'motel'</span>;
+				<pre><code class="language-js"><span class="hljs-comment">// basic sequence</span>
+
+<span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">'motel'</span>;
 
 <span class="hljs-keyword">const</span> vacancies = Motel
   .create()
   .observe(...observer callback...)
   .observe(...observer callback...)
   .observe(...observer callback...)
+  .subscribe(<span class="hljs-function"><span class="hljs-params">action</span> =&gt;</span> store.dipatch(action))
   .connect(<span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'#root'</span>));</code></pre>
 			</div>
 		</div>
