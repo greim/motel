@@ -9,7 +9,6 @@ export const VACANCY_ATTRIBUTE = 'data-vacancy';
 /**
  * A promise which resolves when all vacancies matching
  * a given pattern have disappeared from the DOM.
- * @typeparam
  */
 export type ExitPromise = Promise<void>;
 
