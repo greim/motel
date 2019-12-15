@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 const TELEMETRY_LEVELS = [
+  'silly',
   'debug',
   'warn',
   'error',

@@ -15,7 +15,7 @@ makeTest('Catch an attribute mutation on child', async function() {
   const results = await vacancyTest({
     pattern: 'users/:id',
     trigger: el => $(el, 'b').vac('users/b'),
-    el: '<div><b></b></div>',
+    el: '<div class="foo" id="bar"><b></b></div>',
   });
   assert.deepEqual(results, [{ id: 'b' }]);
 });
@@ -328,7 +328,9 @@ function vacancyTest({
   return new Promise(async (resolve, reject) => {
     try {
       el = $(el).get();
-      const vacancies = Motel.create();
+      const vacancies = Motel.create({
+        telemetryLevel: 'debug',
+      });
       const output = [];
       vacancies.observe(pattern, handler);
       vacancies.subscribe(arg => output.push(arg));

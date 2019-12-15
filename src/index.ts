@@ -250,11 +250,14 @@ export default class Motel<A = any> {
       return this;
     }
 
-    this.telemetry.send('debug', 'connecting instance to DOM');
+    const id = root.id ? `#${root.id}` : '';
+    const className = root.className ? `.${root.className}` : '';
+    const nodeDescriptor = `${root.nodeName.toLowerCase()}${id}${className}`;
+    this.telemetry.send('debug', `connecting instance to DOM node: ${nodeDescriptor}`);
     const gateKeeper = new GateKeeper();
     this.lifecycle = ElementLifecycle.of(root, VACANCY_ATTRIBUTE)
       .on('enter', async(el, vacancy) => {
-        this.telemetry.send('debug', `incrementing vacancy: ${vacancy}`);
+        this.telemetry.send('silly', `incrementing vacancy: ${vacancy}`);
         const exitProm = gateKeeper.incr(vacancy);
         if (exitProm) {
           // exits proceed async
@@ -264,7 +267,7 @@ export default class Motel<A = any> {
         }
       })
       .on('exit', (el, vacancy) => {
-        this.telemetry.send('debug', `decrementing vacancy: ${vacancy}`);
+        this.telemetry.send('silly', `decrementing vacancy: ${vacancy}`);
         gateKeeper.decr(vacancy);
       })
       .start();
