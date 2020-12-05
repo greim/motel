@@ -87,13 +87,10 @@ ul.tsd-type-parameters h4:before {
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography readme-container">
-				<a href="#motel" id="motel" style="color: inherit; text-decoration: none;">
-					<h1>Motel</h1>
+				<a href="#motel-side-effect-free-data-fetching" id="motel-side-effect-free-data-fetching" style="color: inherit; text-decoration: none;">
+					<h1>Motel: Side-effect free data-fetching</h1>
 				</a>
-				<p>Motel simplifies data-fetching in systems like Elm and React by
-					eliminating the need to use side-effects for triggering remote
-				data reads. It uses <em>vacancy observers</em> to accomplish this.</p>
-				<p>Link: <strong><a href="https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb">Overview of Vacancy Observers</a></strong></p>
+				<p>In order to know <em>when</em> to fetch data, we typically use lifecycle events, for example when a component mounts. Motel uses the <a href="https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb">vacancy observer pattern</a> to avoid the need for such side-effects, thus keeping components simpler.</p>
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h2>Installation</h2>
 				</a>
@@ -101,23 +98,22 @@ ul.tsd-type-parameters h4:before {
 				<a href="#api-documentation" id="api-documentation" style="color: inherit; text-decoration: none;">
 					<h2>API Documentation</h2>
 				</a>
-				<p>Documentation is produced using <a href="https://typedoc.org/">typedoc</a>
-					and is available under the <code>docs/</code> folder of the git repo, and
-				also on the web via GitHub pages.</p>
-				<p>Link: <strong><a href="https://greim.github.io/motel/">Full API Documentation</a></strong></p>
+				<p>Documentation is available under the <code>docs/</code> folder of this repo, and also <a href="https://greim.github.io/motel/">online</a>.</p>
 				<a href="#quick-example" id="quick-example" style="color: inherit; text-decoration: none;">
 					<h2>Quick Example</h2>
 				</a>
-				<pre><code class="language-js"><span class="hljs-comment">// basic sequence</span>
+				<pre><code class="language-js"><span class="hljs-comment">// Your main.js entrypoint</span>
 
 <span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">'motel'</span>;
+
+<span class="hljs-keyword">const</span> mountElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'#root'</span>);
 
 <span class="hljs-keyword">const</span> vacancies = Motel.create()
   .observe(...observer callback...)
   .observe(...observer callback...)
   .observe(...observer callback...)
   .subscribe(<span class="hljs-function"><span class="hljs-params">action</span> =&gt;</span> store.dipatch(action))
-  .connect(<span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'#root'</span>));</code></pre>
+  .connect(mountElement);</code></pre>
 				<span class="readme-indicate">readme.md</span>
 			</div>
 		</div>
