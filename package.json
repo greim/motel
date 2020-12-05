@@ -27,18 +27,18 @@
   "author": "Greg Reimer <gregreimer@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/mocha": "^5.2.7",
+    "@types/mocha": "^8.0.4",
     "@types/node": "^12.12.14",
     "@types/sinon": "^7.5.1",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^2.10.0",
     "browserify": "^16.5.0",
     "eslint": "^6.7.2",
-    "mocha": "^6.2.2",
+    "mocha": "^8.2.1",
     "serve-here": "^3.2.0",
     "sinon": "^7.5.0",
     "ts-node": "^9.1.0",
-    "typedoc": "^0.15.4",
+    "typedoc": "^0.19.2",
     "typescript": "^4.1.2"
   },
   "dependencies": {
