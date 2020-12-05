@@ -6,10 +6,7 @@ interface TrackingState {
 }
 
 /**
- * In a world where strings come in and out of existence,
- * spaced arbitrarily over time, some of which strings
- * may be duplicates, this allows us to track unique
- * entrances and exits from that group.
+ * Tracks appearances and disappearances of strings within a set.
  */
 export class GateKeeper {
 
@@ -20,11 +17,10 @@ export class GateKeeper {
   }
 
   /**
-   * This signals the arrival of a new instance of the
-   * given string. If there are already some instances
-   * of this string, this will return undefined. Otherwise
-   * it returns a promise which is resolved when the last
-   * instance of that string leaves.
+   * Add an instance of the given string. If there are already some
+   * instances of this string, this returns undefined. Otherwise it
+   * returns a promise which is resolved when the last instance of
+   * that string leaves.
    */
   incr(str: string): Promise<void> | undefined {
     const state = this.map.get(str);
@@ -42,10 +38,9 @@ export class GateKeeper {
   }
 
   /**
-   * This signals the leaving of an instance of the given
-   * string. If this is the last such instance to leave,
-   * it will internally trigger a resolution to a promise
-   * created when the first instance entered.
+   * Remove an instance of the given string. If this is the last one
+   * to leave, it will internally trigger a resolution to the promise
+   * created when the first instance arriveds.
    */
   decr(str: string): void {
     const state = this.map.get(str);
@@ -61,6 +56,10 @@ export class GateKeeper {
   }
 }
 
+/**
+ * This is a wrapper on a Promise object that can be resolved from
+ * the outside.
+ */
 class ExternallyResolvable {
   public readonly promise: Promise<void>
   private resolver: () => void
