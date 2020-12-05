@@ -79,7 +79,7 @@ ul.tsd-type-parameters h4:before {
 					<a href="globals.html">Globals</a>
 				</li>
 			</ul>
-			<h1> Motel API Documentation</h1>
+			<h1>Motel API Documentation</h1>
 		</div>
 	</div>
 </header>
@@ -104,9 +104,9 @@ ul.tsd-type-parameters h4:before {
 				</a>
 				<pre><code class="language-js"><span class="hljs-comment">// Your main.js entrypoint</span>
 
-<span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">'motel'</span>;
+<span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;motel&#x27;</span>;
 
-<span class="hljs-keyword">const</span> mountElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'#root'</span>);
+<span class="hljs-keyword">const</span> mountElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&#x27;#root&#x27;</span>);
 
 <span class="hljs-keyword">const</span> vacancies = Motel.create()
   .observe(...observer callback...)
@@ -143,7 +143,13 @@ ul.tsd-type-parameters h4:before {
 						<a href="interfaces/patternmatch.html" class="tsd-kind-icon">Pattern<wbr>Match</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/patternobserver.html" class="tsd-kind-icon">Pattern<wbr>Observer</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="interfaces/regexpcallback.html" class="tsd-kind-icon">Reg<wbr>Exp<wbr>Callback</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/regexpobserver.html" class="tsd-kind-icon">Reg<wbr>Exp<wbr>Observer</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/telemetryhandler.html" class="tsd-kind-icon">Telemetry<wbr>Handler</a>
@@ -151,17 +157,44 @@ ul.tsd-type-parameters h4:before {
 					<li class=" tsd-kind-interface tsd-has-type-parameter">
 						<a href="interfaces/wildcardcallback.html" class="tsd-kind-icon">Wildcard<wbr>Callback</a>
 					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/wildcardobserver.html" class="tsd-kind-icon">Wildcard<wbr>Observer</a>
+					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="globals.html#exitpromise" class="tsd-kind-icon">Exit<wbr>Promise</a>
 					</li>
+					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
+						<a href="globals.html#observer" class="tsd-kind-icon">Observer</a>
+					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="globals.html#telemetrylevel" class="tsd-kind-icon">Telemetry<wbr>Level</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#default_options" class="tsd-kind-icon">DEFAULT_<wbr>OPTIONS</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#error_levels" class="tsd-kind-icon">ERROR_<wbr>LEVELS</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#error_threshold" class="tsd-kind-icon">ERROR_<wbr>THRESHOLD</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#telemetry_levels" class="tsd-kind-icon">TELEMETRY_<wbr>LEVELS</a>
 					</li>
 					<li class=" tsd-kind-variable">
 						<a href="globals.html#vacancy_attribute" class="tsd-kind-icon">VACANCY_<wbr>ATTRIBUTE</a>
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#consoletelemetryhandler" class="tsd-kind-icon">console<wbr>Telemetry<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="globals.html#createpublishfunc" class="tsd-kind-icon">create<wbr>Publish<wbr>Func</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#processmatch" class="tsd-kind-icon">process<wbr>Match</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#tick" class="tsd-kind-icon">tick</a>
 					</li>
 				</ul>
 			</nav>
