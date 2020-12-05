@@ -1,6 +1,6 @@
 {
   "name": "motel",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0",
   "description": "data-vacancy observer",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
