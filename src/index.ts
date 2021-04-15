@@ -165,8 +165,8 @@ export default class Motel<A = any> {
    * @typeparam A The type of object that you'll dispatch to
    *   your app from your vacancy observers.
    */
-  public static create<A = any>(opts: MotelOptions = DEFAULT_OPTIONS) {
-    return new Motel<A>(opts);
+  public static create<AA = any>(opts: MotelOptions = DEFAULT_OPTIONS) {
+    return new Motel<AA>(opts);
   }
 
   private readonly telemetry: Telemetry;

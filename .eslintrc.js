@@ -98,8 +98,8 @@ module.exports = {
     'no-label-var': 1, // disallow labels that share a name with a variable
     'no-shadow': 1, // disallow var declarations from shadowing variables in the outer scope
     'no-shadow-restricted-names': 1, // disallow identifiers from shadowing restricted names
-    'no-undef': 2, // disallow the use of undeclared variables unless mentioned in /*global */ comments
-    'no-unused-vars': 1, // disallow unused variables
+    'no-undef': 'off', // disallow the use of undeclared variables unless mentioned in /*global */ comments
+    'no-unused-vars': 'off', // disallow unused variables
     '@typescript-eslint/no-unused-vars': ['warn'],
 
     // Node.js and CommonJS
