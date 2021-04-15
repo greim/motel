@@ -1,25 +1,25 @@
 module.exports = {
-  "env": {
-    "es6": true,
-    "node": true,
-    "mocha": true,
+  'env': {
+    'es6': true,
+    'node': true,
+    'mocha': true,
   },
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2017,
-    "sourceType": "module",
+  'parser': '@typescript-eslint/parser',
+  'parserOptions': {
+    'ecmaVersion': 2017,
+    'sourceType': 'module',
   },
-  "plugins": [
-    "@typescript-eslint"
+  'plugins': [
+    '@typescript-eslint',
   ],
-  "globals": {
-    "window": true,
-    "document": true,
-    "location": true,
-    "fetch": true,
-    "MutationObserver": true
+  'globals': {
+    'window': true,
+    'document': true,
+    'location': true,
+    'fetch': true,
+    'MutationObserver': true,
   },
-  "rules": {
+  'rules': {
 
     // Possible Errors
 
@@ -110,19 +110,19 @@ module.exports = {
     // Stylistic Issues
 
     // 'brace-style': [1, "1tbs", { "allowSingleLine":true }], // enforce consistent brace style for blocks
-    'camelcase': [1, { "properties":"never" }], // enforce camelcase naming convention
-    'comma-dangle': [1, "always-multiline"], // require or disallow trailing commas
+    'camelcase': [1, { 'properties': 'never' }], // enforce camelcase naming convention
+    'comma-dangle': [1, 'always-multiline'], // require or disallow trailing commas
     'comma-spacing': 1, // enforce consistent spacing before and after commas
-    'comma-style': [1, "last"], // enforce consistent comma style
+    'comma-style': [1, 'last'], // enforce consistent comma style
     'computed-property-spacing': 1, // enforce consistent spacing inside computed property brackets
     'consistent-this': 1, // enforce consistent naming when capturing the current execution context
-    'indent': ["warn", 2, { "SwitchCase":1 }], // enforce consistent indentation
+    'indent': ['warn', 2, { 'SwitchCase': 1 }], // enforce consistent indentation
     'key-spacing': 1, // enforce consistent spacing between keys and values in object literal properties
-    'keyword-spacing': [1, { "overrides":{ "catch":{ "after":false } } }], // enforce consistent spacing before and after keywords
+    'keyword-spacing': [1, { 'overrides': { 'catch': { 'after': false } } }], // enforce consistent spacing before and after keywords
     'linebreak-style': 1, // enforce consistent linebreak style
-    'max-nested-callbacks': [1, { "max":5 }], // enforce a maximum depth that callbacks can be nested
-    'max-params': [1, { "max":5 }], // enforce a maximum number of parameters in function definitions
-    'new-cap': [1, { "capIsNew":false }], // require constructor function names to begin with a capital letter
+    'max-nested-callbacks': [1, { 'max': 5 }], // enforce a maximum depth that callbacks can be nested
+    'max-params': [1, { 'max': 5 }], // enforce a maximum number of parameters in function definitions
+    'new-cap': [1, { 'capIsNew': false }], // require constructor function names to begin with a capital letter
     'new-parens': 1, // require parentheses when invoking a constructor with no arguments
     'no-array-constructor': 1, // disallow Array constructors
     'no-mixed-spaces-and-tabs': 1, // disallow mixed spaces and tabs for indentation
@@ -130,10 +130,10 @@ module.exports = {
     'no-new-object': 1, // disallow Object constructors
     'no-spaced-func': 1, // disallow spacing between function identifiers and their applications
     'no-trailing-spaces': 1, // disallow trailing whitespace at the end of lines
-    'quotes': [1, "single"], // enforce the consistent use of either backticks, double, or single quotes
+    'quotes': [1, 'single'], // enforce the consistent use of either backticks, double, or single quotes
     'semi': 1, // require or disallow semicolons instead of ASI
     'semi-spacing': 1, // enforce consistent spacing before and after semicolons
     'space-before-blocks': 1, // enforce consistent spacing before blocks
-    'space-before-function-paren': [1, "never"], // enforce consistent spacing before function definition opening parenthesis
-  }
-}
+    'space-before-function-paren': [1, 'never'], // enforce consistent spacing before function definition opening parenthesis
+  },
+};
