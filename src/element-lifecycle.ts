@@ -97,11 +97,11 @@ export class ElementLifecycle {
         for (const mut of muts) {
           switch (mut.type) {
             case 'childList': {
-              for (const el of mut.removedNodes) {
-                this.exitAll(el);
+              for (const [el, attr] of this.traverseSubtree(mut.removedNodes)) {
+                this.exit(el, attr);
               }
-              for (const el of mut.addedNodes) {
-                this.enterAll(el);
+              for (const [el, attr] of this.traverseSubtree(mut.addedNodes)) {
+                this.enter(el, attr);
               }
               break;
             }
@@ -132,7 +132,9 @@ export class ElementLifecycle {
         exitHandlers,
         observer,
       };
-      this.enterAll(this.root);
+      for (const [el, attr] of this.traverseSubtree([this.root])) {
+        this.enter(this.root, attr);
+      }
     }
     return this;
   }
@@ -165,33 +167,30 @@ export class ElementLifecycle {
     }
   }
 
-  private enterAll(node: Node) {
-    if (isElement(node)) {
-      const attr = node.getAttribute(this.attribute);
-      if (attr) {
-        this.enter(node, attr);
-      }
-      const descendantVacancies = node.querySelectorAll(this.attributeSelector);
-      for (const el of descendantVacancies) {
-        const descAttr = el.getAttribute(this.attribute);
-        if (descAttr) {
-          this.enter(el, descAttr);
+  /** Traverse the subtree of an added or removed
+   * node looking for vacancies. */
+  private *traverseSubtree(
+    nodes: Iterable<Node>,
+  ): IterableIterator<[Element, string]> {
+    const seen = new Set();
+    for (const node of nodes) {
+      if (isElement(node)) {
+        const attr = node.getAttribute(this.attribute);
+        if (attr) {
+          if (!seen.has(node)) {
+            yield [node, attr];
+            seen.add(node);
+          }
         }
-      }
-    }
-  }
-
-  private exitAll(node: Node) {
-    if (isElement(node)) {
-      const attr = node.getAttribute(this.attribute);
-      if (attr) {
-        this.exit(node, attr);
-      }
-      const descendantVacancies = node.querySelectorAll(this.attributeSelector);
-      for (const el of descendantVacancies) {
-        const descAttr = el.getAttribute(this.attribute);
-        if (descAttr) {
-          this.exit(el, descAttr);
+        const descendants = node.querySelectorAll(this.attributeSelector);
+        for (const desc of descendants) {
+          const descAttr = desc.getAttribute(this.attribute);
+          if (descAttr) {
+            if (!seen.has(desc)) {
+              yield [desc, descAttr];
+              seen.add(desc);
+            }
+          }
         }
       }
     }

@@ -90,7 +90,19 @@ ul.tsd-type-parameters h4:before {
 				<a href="#motel-side-effect-free-data-fetching" id="motel-side-effect-free-data-fetching" style="color: inherit; text-decoration: none;">
 					<h1>Motel: Side-effect free data-fetching</h1>
 				</a>
-				<p>In order to know <em>when</em> to fetch data, we typically use lifecycle events, for example when a component mounts. Motel uses the <a href="https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb">vacancy observer pattern</a> to avoid the need for such side-effects, thus keeping components simpler.</p>
+				<a href="#remote-data-dependencies" id="remote-data-dependencies" style="color: inherit; text-decoration: none;">
+					<h2>Remote data dependencies</h2>
+				</a>
+				<p>React is a function of state, so one of our jobs as developers is making that state available. Sometimes it&#39;s available locally; either hard-coded in the source or provided by the user. Other times it&#39;s available remotely; for example stored in the cloud. These <em>remote data dependencies</em> are essentially the &quot;R&quot; in <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a>.</p>
+				<a href="#the-vacancy-observer-pattern" id="the-vacancy-observer-pattern" style="color: inherit; text-decoration: none;">
+					<h2>The vacancy observer pattern</h2>
+				</a>
+				<p>Typically, in order to know when to fetch remote data dependencies, we&#39;re forced to use lifecycle events, which are side effects. This lib uses the <a href="https://gist.github.com/greim/3de3bcb71a672e11c75e371b7b81f4bb">vacancy observer pattern</a> to fetch remote data dependencies without side effects, thus keeping UI logic closer to the <em>pure function of application state</em> ideal.</p>
+				<a href="#prerequisites" id="prerequisites" style="color: inherit; text-decoration: none;">
+					<h2>Prerequisites</h2>
+				</a>
+				<p>This lib has no dependencies or requirements of React.</p>
+				<p>The prerequisite is rather that you&#39;re using an approach where state is managed centrally, and where UI components are a pure function of application state. React+Redux and Elm are both examples of this.</p>
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h2>Installation</h2>
 				</a>
@@ -102,18 +114,42 @@ ul.tsd-type-parameters h4:before {
 				<a href="#quick-example" id="quick-example" style="color: inherit; text-decoration: none;">
 					<h2>Quick Example</h2>
 				</a>
-				<pre><code class="language-js"><span class="hljs-comment">// Your main.js entrypoint</span>
-
-<span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;motel&#x27;</span>;
-
-<span class="hljs-keyword">const</span> mountElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&#x27;#root&#x27;</span>);
-
-<span class="hljs-keyword">const</span> vacancies = Motel.create()
-  .observe(...observer callback...)
-  .observe(...observer callback...)
-  .observe(...observer callback...)
-  .subscribe(<span class="hljs-function"><span class="hljs-params">action</span> =&gt;</span> store.dipatch(action))
-  .connect(mountElement);</code></pre>
+				<a href="#in-your-mainjs-entry-point" id="in-your-mainjs-entry-point" style="color: inherit; text-decoration: none;">
+					<h2>In your <code>main.js</code> entry-point</h2>
+				</a>
+				<p>Import or require this library.</p>
+				<pre><code class="language-js"><span class="hljs-keyword">import</span> Motel <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;motel&#x27;</span>;
+<span class="hljs-keyword">const</span> Motel = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;motel&#x27;</span>);</code></pre>
+				<p>Grab a reference to the &quot;mount node&quot; of your app.</p>
+				<pre><code class="language-js"><span class="hljs-keyword">const</span> mountNode = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&#x27;#root&#x27;</span>);</code></pre>
+				<p>Initialize the motel instance. This exists for the lifetime of the app.</p>
+				<pre><code class="language-js"><span class="hljs-keyword">const</span> vacancies = Motel.create();</code></pre>
+				<p>Setup handler for all vacancies as they occur.</p>
+				<pre><code class="language-js">vacancies.observe(<span class="hljs-string">&#x27;*&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">url, dispatch</span>) =&gt;</span> {
+  dispatch({ <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;requested&#x27;</span>, url });
+  <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> fetcfh(url);
+  <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> response.json();
+  dispatch({ <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;received&#x27;</span>, url, data });
+});</code></pre>
+				<p>Capture the output of the above callbacks.</p>
+				<pre><code class="language-js">vacancies.subscribe(<span class="hljs-function"><span class="hljs-params">action</span> =&gt;</span> store.dipatch(action));</code></pre>
+				<p>Start observing vacancies on the DOM subtree of the mount node.</p>
+				<pre><code class="language-js">vacancies.connect(mountNode);</code></pre>
+				<a href="#in-any-react-component" id="in-any-react-component" style="color: inherit; text-decoration: none;">
+					<h2>In any React component</h2>
+				</a>
+				<p>Simply render data vacancies on any component with a remote data dependency.</p>
+				<pre><code class="language-jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">UserProfile</span>(<span class="hljs-params">props</span>) </span>{
+  <span class="hljs-keyword">return</span> (
+    <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-vacancy</span>=<span class="hljs-string">&quot;/api/users/xxxxxxxx&quot;</span>&gt;</span>
+      ...content here...
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+  );
+}</code></pre>
+				<a href="#further-examples" id="further-examples" style="color: inherit; text-decoration: none;">
+					<h2>Further examples</h2>
+				</a>
+				<p>For more in-depth examples, refer to <code>examples.md</code> in this same repo.</p>
 				<span class="readme-indicate">readme.md</span>
 			</div>
 		</div>
