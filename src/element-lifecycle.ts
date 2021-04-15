@@ -94,13 +94,20 @@ export class ElementLifecycle {
     } else if (this.mode.is === 'waiting') {
       const { entranceHandlers, exitHandlers } = this.mode;
       const observer = new MutationObserver(muts => {
+
+        // Both Chrome and Firefox can sometimes send mutation
+        // lists which can contain duplicate elements in their
+        // subtrees. These sets help remove those duplicates.
+        const dedupeExit = new Set();
+        const dedupeEnter = new Set();
+
         for (const mut of muts) {
           switch (mut.type) {
             case 'childList': {
-              for (const [el, attr] of this.traverseSubtree(mut.removedNodes)) {
+              for (const [el, attr] of this.subtree(mut.removedNodes, dedupeExit)) {
                 this.exit(el, attr);
               }
-              for (const [el, attr] of this.traverseSubtree(mut.addedNodes)) {
+              for (const [el, attr] of this.subtree(mut.addedNodes, dedupeEnter)) {
                 this.enter(el, attr);
               }
               break;
@@ -132,7 +139,7 @@ export class ElementLifecycle {
         exitHandlers,
         observer,
       };
-      for (const [el, attr] of this.traverseSubtree([this.root])) {
+      for (const [el, attr] of this.subtree([this.root], new Set())) {
         this.enter(el, attr);
       }
     }
@@ -168,28 +175,27 @@ export class ElementLifecycle {
   }
 
   /** Traverse the subtree of an added or removed
-   * node looking for vacancies. */
-  private *traverseSubtree(
+   * node looking for vacancies. Ensure duplicates
+   * aren't reported using the given dedupe set. */
+  private *subtree(
     nodes: Iterable<Node>,
+    dedupe: Set<any>,
   ): IterableIterator<[Element, string]> {
-    const seen = new Set();
     for (const node of nodes) {
       if (isElement(node)) {
         const attr = node.getAttribute(this.attribute);
-        if (attr) {
-          if (!seen.has(node)) {
+        if (attr !== null) {
+          if (!dedupe.has(node)) {
             yield [node, attr];
-            seen.add(node);
+            dedupe.add(node);
           }
         }
         const descendants = node.querySelectorAll(this.attributeSelector);
         for (const desc of descendants) {
-          const descAttr = desc.getAttribute(this.attribute);
-          if (descAttr) {
-            if (!seen.has(desc)) {
-              yield [desc, descAttr];
-              seen.add(desc);
-            }
+          const descAttr = desc.getAttribute(this.attribute)!;
+          if (!dedupe.has(desc)) {
+            yield [desc, descAttr];
+            dedupe.add(desc);
           }
         }
       }

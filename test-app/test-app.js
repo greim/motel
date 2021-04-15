@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const Motel = require('../lib/index').default;
 const makeTest = require('./make-test');
 const assert = require('assert');
@@ -8,7 +9,7 @@ makeTest('Catch an attribute mutation on root', async function() {
     pattern: 'users/:id',
     trigger: el => $(el).vac('users/a'),
   });
-  assert.deepEqual(results, [{ id: 'a' }]);
+  assert.deepStrictEqual(results, [{ id: 'a' }]);
 });
 
 makeTest('Catch an attribute mutation on child', async function() {
@@ -17,7 +18,7 @@ makeTest('Catch an attribute mutation on child', async function() {
     trigger: el => $(el, 'b').vac('users/b'),
     el: '<div class="foo" id="bar"><b></b></div>',
   });
-  assert.deepEqual(results, [{ id: 'b' }]);
+  assert.deepStrictEqual(results, [{ id: 'b' }]);
 });
 
 makeTest('Catch an attribute mutation on grandchild', async function() {
@@ -26,7 +27,7 @@ makeTest('Catch an attribute mutation on grandchild', async function() {
     trigger: el => $(el, 'b').vac('users/c'),
     el: '<div><div><b></b></div></div>',
   });
-  assert.deepEqual(results, [{ id: 'c' }]);
+  assert.deepStrictEqual(results, [{ id: 'c' }]);
 });
 
 makeTest('Catch a child addition', async function() {
@@ -34,7 +35,39 @@ makeTest('Catch a child addition', async function() {
     pattern: 'users/:id',
     trigger: el => $(el).append('<div data-vacancy="users/sdf"></div>'),
   });
-  assert.deepEqual(results, [{ id: 'sdf' }]);
+  assert.deepStrictEqual(results, [{ id: 'sdf' }]);
+});
+
+makeTest('Catch a child addition (big vacancy)', async function() {
+  const bigVac = 'abcdefg '.repeat(1000000);
+  const html = `
+    <span>
+      <span>
+        <span>
+          <span>
+            <span>
+              <div data-vacancy="users/${bigVac}"></div>
+            </span>
+          </span>
+        </span>
+      </span>
+    </span>
+  `;
+  const results = await vacancyTest({
+    pattern: 'users/:id',
+    triggers: [
+      el => $(el).append(html),
+      el => {el.innerHTML = '';},
+      el => $(el).append(html),
+      el => {el.innerHTML = '';},
+    ],
+  });
+  assert.deepStrictEqual(results, [
+    { id: bigVac },
+    ['done', { id: bigVac }],
+    { id: bigVac },
+    ['done', { id: bigVac }],
+  ]);
 });
 
 makeTest('Catch a grandchild addition', async function() {
@@ -42,7 +75,7 @@ makeTest('Catch a grandchild addition', async function() {
     pattern: 'users/:id',
     trigger: el => $(el).append('<div><div data-vacancy="users/hj"></div></div>'),
   });
-  assert.deepEqual(results, [{ id: 'hj' }]);
+  assert.deepStrictEqual(results, [{ id: 'hj' }]);
 });
 
 makeTest('Catch multiple attribute additions', async function() {
@@ -51,7 +84,7 @@ makeTest('Catch multiple attribute additions', async function() {
     trigger: el => $(el, 'b').each((e, idx) => $(e).attr('data-vacancy', `users/${idx++}`)),
     el: '<div><b></b><b></b><b></b></div>',
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: '0' },
     { id: '1' },
     { id: '2' },
@@ -64,10 +97,10 @@ makeTest('Catch multiple node additions', async function() {
     trigger: el => $(el)
       .append([4, 5, 6]
         .map(n => `<b data-vacancy="users/${n}"></b>`)
-        .join('')
+        .join(''),
       ),
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: '4' },
     { id: '5' },
     { id: '6' },
@@ -81,10 +114,10 @@ makeTest('Catch nested node additions', async function() {
       <b data-vacancy="users/4">
         <br data-vacancy="users/5">
         <br data-vacancy="users/6">
-      </b>`
+      </b>`,
     ),
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: '4' },
     { id: '5' },
     { id: '6' },
@@ -100,7 +133,7 @@ makeTest('Catch nested attribute mutations', async function() {
     },
     el: '<div><i class="a"><i class="b"></i></i></div>',
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: 'a' },
     { id: 'b' },
   ]);
@@ -112,7 +145,7 @@ makeTest('Allow multiple sends', async function() {
     handler: (params, send) => { send(1); send(2); },
     trigger: el => $(el).vac('users/a'),
   });
-  assert.deepEqual(results, [1, 2]);
+  assert.deepStrictEqual(results, [1, 2]);
 });
 
 makeTest('Allow async sends', async function() {
@@ -125,7 +158,7 @@ makeTest('Allow async sends', async function() {
     },
     trigger: el => $(el).vac('users/a'),
   });
-  assert.deepEqual(results, [1, 2]);
+  assert.deepStrictEqual(results, [1, 2]);
 });
 
 makeTest('De-dupe vacancies', async function() {
@@ -134,7 +167,7 @@ makeTest('De-dupe vacancies', async function() {
     trigger: el => $(el, 'b').each(b => $(b).vac('users/a')),
     el: '<div><b></b><b></b><b></b></div>',
   });
-  assert.deepEqual(results, [{ id: 'a' }]);
+  assert.deepStrictEqual(results, [{ id: 'a' }]);
 });
 
 makeTest('Catch both an attribute mutation and a node addition', async function() {
@@ -143,7 +176,7 @@ makeTest('Catch both an attribute mutation and a node addition', async function(
     trigger: el => $(el).vac('users/x').find('i').vac('users/a').append('<b data-vacancy="users/b"></b>'),
     el: '<div><i></i></div>',
   });
-  assert.deepEqual(results, [{ id: 'x' }, { id: 'a' }, { id: 'b' }]);
+  assert.deepStrictEqual(results, [{ id: 'x' }, { id: 'a' }, { id: 'b' }]);
 });
 
 makeTest('publish initial vacancies on descendants', async function() {
@@ -151,7 +184,7 @@ makeTest('publish initial vacancies on descendants', async function() {
     pattern: 'users/:id',
     el: '<i><br data-vacancy="users/bar"/><br data-vacancy="users/baz"/></i>',
   });
-  assert.deepEqual(results, [{ id: 'bar' }, { id: 'baz' }]);
+  assert.deepStrictEqual(results, [{ id: 'bar' }, { id: 'baz' }]);
 });
 
 makeTest('publish initial vacancies on root', async function() {
@@ -159,7 +192,7 @@ makeTest('publish initial vacancies on root', async function() {
     pattern: 'users/:id',
     el: '<i data-vacancy="users/bar"><br/><br/></i>',
   });
-  assert.deepEqual(results, [{ id: 'bar' }]);
+  assert.deepStrictEqual(results, [{ id: 'bar' }]);
 });
 
 makeTest('publish initial vacancies on root and descendants', async function() {
@@ -167,7 +200,7 @@ makeTest('publish initial vacancies on root and descendants', async function() {
     pattern: 'users/:id',
     el: '<i data-vacancy="users/foo"><br data-vacancy="users/bar"/><br data-vacancy="users/baz"/></i>',
   });
-  assert.deepEqual(results, [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }]);
+  assert.deepStrictEqual(results, [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }]);
 });
 
 makeTest('does not signal exit', async function() {
@@ -175,7 +208,7 @@ makeTest('does not signal exit', async function() {
     pattern: 'users/:id',
     el: '<i data-vacancy="users/foo"></i>',
   });
-  assert.deepEqual(results, [{ id: 'foo' }]);
+  assert.deepStrictEqual(results, [{ id: 'foo' }]);
 });
 
 makeTest('handles vacancy changes', async function() {
@@ -188,7 +221,7 @@ makeTest('handles vacancy changes', async function() {
       el => $(el, 'b').vac(null),
     ],
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: 'foo' },
     ['done', { id: 'foo' }],
     { id: 'bar' },
@@ -205,7 +238,7 @@ makeTest('signals exit', async function() {
       el => $(el, 'b').vac(null),
     ],
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: 'foo' },
     { id: 'bar' },
     ['done', { id: 'foo' }],
@@ -230,12 +263,12 @@ makeTest('Only signal exit on last', async function() {
       el => $(el, '.a').vac(null),
       el => $(el, '.b').vac(null),
       (el, output) => {
-        assert.deepEqual(output, [{ id: 'x' }]);
+        assert.deepStrictEqual(output, [{ id: 'x' }]);
       },
       el => $(el, '.c').vac(null),
     ],
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: 'x' },
     ['done', { id: 'x' }],
   ]);
@@ -258,7 +291,7 @@ makeTest('Handles an overlapping vacancy', async function() {
       },
     ],
   });
-  assert.deepEqual(results, [
+  assert.deepStrictEqual(results, [
     { id: 'abc' },
     ['done', { id: 'abc' }],
   ]);
@@ -281,8 +314,8 @@ makeTest('Handles a reappearing vacancy', async function() {
       },
     ],
   });
-  console.log(results)
-  assert.deepEqual(results, [
+  console.log(results);
+  assert.deepStrictEqual(results, [
     { id: 'abc' },
     ['done', { id: 'abc' }],
     { id: 'abc' },
@@ -298,18 +331,13 @@ makeTest('Handles a wildcard vacancy', async function() {
       <b class="b"></b>
     </div>`,
   });
-  console.log(results)
-  assert.deepEqual(results, [
+  console.log(results);
+  assert.deepStrictEqual(results, [
     'users/abc',
   ]);
 });
 
 // ----------------------------------------
-
-function operate(el, sel, action) {
-  const sub = el.querySelector(sel);
-  action(sub);
-}
 
 async function defaultHandler(params, send, exit) {
   send(params);
@@ -325,7 +353,7 @@ function vacancyTest({
   triggers = [],
   el,
 }) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async(resolve, reject) => {
     try {
       el = $(el).get();
       const vacancies = Motel.create({
