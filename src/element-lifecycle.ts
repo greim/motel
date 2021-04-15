@@ -133,7 +133,7 @@ export class ElementLifecycle {
         observer,
       };
       for (const [el, attr] of this.traverseSubtree([this.root])) {
-        this.enter(this.root, attr);
+        this.enter(el, attr);
       }
     }
     return this;
