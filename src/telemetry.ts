@@ -8,20 +8,20 @@ const TELEMETRY_LEVELS = [
   'critical',
 ] as const;
 
-export type TelemetryLevel = typeof TELEMETRY_LEVELS[number];
+export type TelemetryLevel = (typeof TELEMETRY_LEVELS)[number];
 
 const ERROR_THRESHOLD = TELEMETRY_LEVELS.indexOf('error');
 
-const ERROR_LEVELS: Set<TelemetryLevel> =
-  new Set(TELEMETRY_LEVELS.slice(ERROR_THRESHOLD));
+const ERROR_LEVELS: Set<TelemetryLevel> = new Set(
+  TELEMETRY_LEVELS.slice(ERROR_THRESHOLD),
+);
 
 /**
  * @ignore
  */
 export default class Telemetry {
-
-  private levels: Set<TelemetryLevel>
-  private sender: TelemetryHandler
+  private levels: Set<TelemetryLevel>;
+  private sender: TelemetryHandler;
 
   constructor(level: TelemetryLevel, sender: TelemetryHandler) {
     const indexOfLevel = TELEMETRY_LEVELS.indexOf(level);
@@ -38,7 +38,11 @@ export default class Telemetry {
   }
 }
 
-export const consoleTelemetryHandler: TelemetryHandler = (isError, message, ...args) => {
+export const consoleTelemetryHandler: TelemetryHandler = (
+  isError,
+  message,
+  ...args
+) => {
   if (isError) {
     console.error(message, ...args);
   } else {

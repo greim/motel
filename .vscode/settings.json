@@ -1,9 +1,10 @@
 {
-  "eslint.autoFixOnSave": true,
-  "eslint.validate": [
-    "typescript"
+  "editor.rulers": [
+    80
   ],
+  "editor.formatOnSave": true,
+  "typescript.format.enable": false,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "always"
   }
 }

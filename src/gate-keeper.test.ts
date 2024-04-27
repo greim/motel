@@ -2,7 +2,6 @@ import { GateKeeper } from './gate-keeper';
 import { ok } from 'assert';
 
 describe('GateKeeper', () => {
-
   it('constructs', () => {
     return new GateKeeper();
   });
@@ -17,10 +16,10 @@ describe('GateKeeper', () => {
     const tracker = new GateKeeper();
     tracker.incr('foo');
     const isEnter = tracker.incr('foo');
-    ok(!(isEnter?.then));
+    ok(!isEnter?.then);
   });
 
-  it('promise is resolved after incr/decr', async() => {
+  it('promise is resolved after incr/decr', async () => {
     const tracker = new GateKeeper();
     const isEnter = tracker.incr('foo');
     tracker.decr('foo');
@@ -28,7 +27,7 @@ describe('GateKeeper', () => {
     ok(result === undefined);
   });
 
-  it('promise is not resolved after not incr/incr/decr', async() => {
+  it('promise is not resolved after not incr/incr/decr', async () => {
     const tracker = new GateKeeper();
     const isEnter = tracker.incr('foo');
     tracker.incr('foo');
@@ -37,7 +36,7 @@ describe('GateKeeper', () => {
     ok(result === 'x');
   });
 
-  it('promise is resolved after not incr/incr/decr/decr', async() => {
+  it('promise is resolved after not incr/incr/decr/decr', async () => {
     const tracker = new GateKeeper();
     const isEnter = tracker.incr('foo');
     tracker.incr('foo');
@@ -47,7 +46,7 @@ describe('GateKeeper', () => {
     ok(result === undefined);
   });
 
-  it('tracks complex changes', async() => {
+  it('tracks complex changes', async () => {
     const tracker = new GateKeeper();
     const isEnter = tracker.incr('foo');
     ok(!tracker.incr('foo'));
@@ -134,7 +133,7 @@ describe('GateKeeper', () => {
 });
 
 function xAfter(t: number): Promise<'x'> {
-  return new Promise(res => {
+  return new Promise((res) => {
     setTimeout(() => {
       res('x');
     }, t);

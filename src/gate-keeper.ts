@@ -9,8 +9,7 @@ interface TrackingState {
  * Tracks appearances and disappearances of strings within a set.
  */
 export class GateKeeper {
-
-  private readonly map: Map<string, TrackingState>
+  private readonly map: Map<string, TrackingState>;
 
   constructor() {
     this.map = new Map();
@@ -61,11 +60,11 @@ export class GateKeeper {
  * the outside.
  */
 class ExternallyResolvable {
-  public readonly promise: Promise<void>
-  private resolver: () => void
+  public readonly promise: Promise<void>;
+  private resolver: () => void;
   constructor() {
     this.resolver = NOOP;
-    this.promise = new Promise(resolver => {
+    this.promise = new Promise((resolver) => {
       this.resolver = resolver;
     });
   }

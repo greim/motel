@@ -2,7 +2,8 @@ import UrlPattern from 'url-pattern';
 import assertNever from './assert-never';
 import { ElementLifecycle } from './element-lifecycle';
 import { GateKeeper } from './gate-keeper';
-import Telemetry, { TelemetryLevel, TelemetryHandler, consoleTelemetryHandler } from './telemetry';
+import type { TelemetryLevel, TelemetryHandler } from './telemetry';
+import Telemetry, { consoleTelemetryHandler } from './telemetry';
 
 /** The name of the vacancy attribute. */
 export const VACANCY_ATTRIBUTE = 'data-vacancy';
@@ -100,10 +101,7 @@ export interface Dispatcher<A> {
   (action: A): void;
 }
 
-type Observer<T>
-  = PatternObserver<T>
-  | RegExpObserver<T>
-  | WildcardObserver<T>;
+type Observer<T> = PatternObserver<T> | RegExpObserver<T> | WildcardObserver<T>;
 
 interface PatternObserver<T> {
   is: 'pattern';
@@ -158,7 +156,6 @@ interface WildcardObserver<T> {
  *   would probably be your Redux action type.
  */
 export default class Motel<A = any> {
-
   /**
    * Create a new instance with the given options.
    *
@@ -196,7 +193,7 @@ export default class Motel<A = any> {
    * @param wildcard The special `"*"` string, which represents
    *   a pattern that matches everything.
    */
-  public observe(wildcard: '*', handler: WildcardCallback<A>): Motel<A>
+  public observe(wildcard: '*', handler: WildcardCallback<A>): Motel<A>;
   /**
    * Create an observer that matches vacancies based on the
    * given string pattern. Pattern matching follows the rules of
@@ -206,14 +203,14 @@ export default class Motel<A = any> {
    * @param stringPattern A pattern string as described
    *   [here](https://www.npmjs.com/package/url-pattern).
    */
-  public observe(stringPattern: string, handler: PatternCallback<A>): Motel<A>
+  public observe(stringPattern: string, handler: PatternCallback<A>): Motel<A>;
   /**
    * Create an observer that matches vacancies based on a regex.
    *
    * @param regex A pattern string as described
    *   [here](https://www.npmjs.com/package/url-pattern).
    */
-  public observe(regex: RegExp, handler: RegExpCallback<A>): Motel<A>
+  public observe(regex: RegExp, handler: RegExpCallback<A>): Motel<A>;
   /**
    * @param handler A callback function that runs whenever
    *   a vacancy is found.
@@ -225,7 +222,10 @@ export default class Motel<A = any> {
       observers.push({ is: 'wildcard', handler });
     } else if (typeof matcher === 'string') {
       const pattern = new UrlPattern(matcher);
-      this.telemetry.send('debug', `adding string pattern observer: ${matcher}`);
+      this.telemetry.send(
+        'debug',
+        `adding string pattern observer: ${matcher}`,
+      );
       observers.push({ is: 'pattern', pattern, handler });
     } else {
       const regex = matcher;
@@ -253,10 +253,13 @@ export default class Motel<A = any> {
     const id = root.id ? `#${root.id}` : '';
     const className = root.className ? `.${root.className}` : '';
     const nodeDescriptor = `${root.nodeName.toLowerCase()}${id}${className}`;
-    this.telemetry.send('debug', `connecting instance to DOM node: ${nodeDescriptor}`);
+    this.telemetry.send(
+      'debug',
+      `connecting instance to DOM node: ${nodeDescriptor}`,
+    );
     const gateKeeper = new GateKeeper();
     this.lifecycle = ElementLifecycle.of(root, VACANCY_ATTRIBUTE)
-      .on('enter', async(el, vacancy) => {
+      .on('enter', async (_el, vacancy) => {
         this.telemetry.send('silly', `incrementing vacancy: ${vacancy}`);
         const exitProm = gateKeeper.incr(vacancy);
         if (exitProm) {
@@ -266,7 +269,7 @@ export default class Motel<A = any> {
           this._publish(vacancy, exitProm);
         }
       })
-      .on('exit', (el, vacancy) => {
+      .on('exit', (_el, vacancy) => {
         this.telemetry.send('silly', `decrementing vacancy: ${vacancy}`);
         gateKeeper.decr(vacancy);
       })
@@ -308,25 +311,36 @@ export default class Motel<A = any> {
   _publish(vacancy: string, exitProm: Promise<void>): void {
     this.telemetry.send('debug', `entering vacancy: ${vacancy}`);
     exitProm.then(() =>
-      this.telemetry.send('debug', `exiting vacancy: ${vacancy}`));
+      this.telemetry.send('debug', `exiting vacancy: ${vacancy}`),
+    );
     const { observers, send } = this;
     const proms: Array<Promise<void> | void> = [];
-    for (let observer of observers) {
+    for (const observer of observers) {
       switch (observer.is) {
         case 'wildcard': {
           const { handler } = observer;
           this.telemetry.send('debug', `handling wildcard vacancy: ${vacancy}`);
-          try { proms.push(handler(vacancy, send, exitProm)); }
-          catch(ex) { proms.push(Promise.reject(ex)); }
+          try {
+            proms.push(handler(vacancy, send, exitProm));
+          } catch (ex) {
+            proms.push(Promise.reject(ex));
+          }
           break;
         }
         case 'pattern': {
           const { pattern, handler } = observer;
           const match = processMatch(pattern.match(vacancy));
           if (match) {
-            this.telemetry.send('debug', `handling string pattern vacancy: ${vacancy}`, match);
-            try { proms.push(handler(match, send, exitProm)); }
-            catch(ex) { proms.push(Promise.reject(ex)); }
+            this.telemetry.send(
+              'debug',
+              `handling string pattern vacancy: ${vacancy}`,
+              match,
+            );
+            try {
+              proms.push(handler(match, send, exitProm));
+            } catch (ex) {
+              proms.push(Promise.reject(ex));
+            }
           }
           break;
         }
@@ -334,9 +348,16 @@ export default class Motel<A = any> {
           const { regex, handler } = observer;
           const match = vacancy.match(regex);
           if (match) {
-            this.telemetry.send('debug', `handling regex vacancy: ${vacancy}`, match);
-            try { proms.push(handler(match, send, exitProm)); }
-            catch(ex) { proms.push(Promise.reject(ex)); }
+            this.telemetry.send(
+              'debug',
+              `handling regex vacancy: ${vacancy}`,
+              match,
+            );
+            try {
+              proms.push(handler(match, send, exitProm));
+            } catch (ex) {
+              proms.push(Promise.reject(ex));
+            }
           }
           break;
         }
@@ -349,8 +370,13 @@ export default class Motel<A = any> {
     if (proms.length === 0) {
       this.telemetry.send('warn', `unobserved vacancy: ${vacancy}`);
     }
-    Promise.all(proms).catch(err =>
-      this.telemetry.send('error', `error while handling vacancy: ${vacancy}`, err));
+    Promise.all(proms).catch((err) =>
+      this.telemetry.send(
+        'error',
+        `error while handling vacancy: ${vacancy}`,
+        err,
+      ),
+    );
   }
 }
 
@@ -359,11 +385,11 @@ function createPublishFunc<T>(
   telemetry: Telemetry,
 ): Dispatcher<T> {
   return (action: T) => {
-    for (let sub of subscriptions) {
+    for (const sub of subscriptions) {
       try {
         telemetry.send('debug', 'publishing action', action);
         sub(action);
-      } catch(ex) {
+      } catch (ex) {
         telemetry.send('error', 'error while publishing action', ex);
       }
     }
@@ -373,6 +399,7 @@ function createPublishFunc<T>(
 function processMatch(match: any): PatternMatch | null {
   if (match) {
     const result: PatternMatch = {};
+    // eslint-disable-next-line prefer-const
     for (let [key, val] of Object.entries(match)) {
       if (Array.isArray(val)) {
         val = val[0];
@@ -390,5 +417,5 @@ function processMatch(match: any): PatternMatch | null {
 }
 
 function tick(): Promise<void> {
-  return new Promise(r => setImmediate(r));
+  return Promise.resolve();
 }

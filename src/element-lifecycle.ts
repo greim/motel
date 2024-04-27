@@ -47,7 +47,6 @@ interface DoneMode {
  *     .start();
  */
 export class ElementLifecycle {
-
   public static of(root: Element, attr: string) {
     return new ElementLifecycle(root, attr);
   }
@@ -93,8 +92,7 @@ export class ElementLifecycle {
       throw new Error('lifecycle is finished');
     } else if (this.mode.is === 'waiting') {
       const { entranceHandlers, exitHandlers } = this.mode;
-      const observer = new MutationObserver(muts => {
-
+      const observer = new MutationObserver((muts) => {
         // Both Chrome and Firefox can sometimes send mutation
         // lists which can contain duplicate elements in their
         // subtrees. These sets help remove those duplicates.
@@ -104,10 +102,16 @@ export class ElementLifecycle {
         for (const mut of muts) {
           switch (mut.type) {
             case 'childList': {
-              for (const [el, attr] of this.subtree(mut.removedNodes, dedupeExit)) {
+              for (const [el, attr] of this.subtree(
+                mut.removedNodes,
+                dedupeExit,
+              )) {
                 this.exit(el, attr);
               }
-              for (const [el, attr] of this.subtree(mut.addedNodes, dedupeEnter)) {
+              for (const [el, attr] of this.subtree(
+                mut.addedNodes,
+                dedupeEnter,
+              )) {
                 this.enter(el, attr);
               }
               break;
